@@ -1,9 +1,7 @@
 class BasePokerPlayer(object):
   """Base Poker client implementation
-
   To create poker client, you need to override this class and
   implement following 7 methods.
-
   - declare_action
   - receive_game_start_message
   - receive_round_start_message
@@ -45,7 +43,11 @@ class BasePokerPlayer(object):
   def respond_to_ask(self, message):
     """Called from Dealer when ask message received from RoundManager"""
     valid_actions, hole_card, round_state = self.__parse_ask_message(message)
-    return self.declare_action(valid_actions, hole_card, round_state)
+    action =  self.declare_action(valid_actions, hole_card, round_state)
+    for va in valid_actions:
+        if action == va['action'] :
+            return action
+    raise ValueError('Invalid Action Called')
 
   def receive_notification(self, message):
     """Called from Dealer when notification received from RoundManager"""
@@ -106,4 +108,3 @@ class BasePokerPlayer(object):
     hand_info = message["hand_info"]
     round_state = message["round_state"]
     return winners, hand_info, round_state
-
