@@ -54,13 +54,14 @@ def get_game_state(round_state, hole_card, uuid):
 
     return game_state
 class Game:
-    def __init__(self, hole_card, player, state, num_rounds, valid_actions):
+    def __init__(self, hole_card, player, state, num_rounds, valid_actions, round_state):
         self.hole_card = hole_card
         self.player = player
         self.init_state = state
         self.emulator = Emulator()
         self.num_rounds = num_rounds
         self.valid_actions = valid_actions
+        self.round_state = round_state
         self.emulator.set_game_rule(2,self.num_rounds,10,0)
 
     """ Check if game tree ends """
@@ -74,9 +75,12 @@ class Game:
 
     def eval_heuristics(self, player, state):
         win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
+        amount_in_pot = round_state['pot']['main']['amount']
         if (self.player == player):
-            return win_rate
-        return -win_rate
+            return win_rate, amount_in_pot
+        return -win_rate, amount_in_pot
+
+
 
     def future_move(self, state):
         return state['next_player']
