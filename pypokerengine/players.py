@@ -45,8 +45,8 @@ class BasePokerPlayer(object):
     valid_actions, hole_card, round_state = self.__parse_ask_message(message)
     action =  self.declare_action(valid_actions, hole_card, round_state)
     for va in valid_actions:
-        if action == va['action'] :
-            return action
+      if action == va['action'] :
+        return action
     raise ValueError('Invalid Action Called')
 
   def receive_notification(self, message):
