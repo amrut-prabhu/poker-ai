@@ -103,7 +103,7 @@ def timeout2(seconds=None, defaultretval="Blah",exception_message="[EXP]: Action
         if not seconds:
             return function
 
-        
+
         def handler(signum, frame):
             _raise_exception(timeout_exception, exception_message)
             #print("[EXP] : TimedOut, Returning Default Value (Fold)")
@@ -181,7 +181,7 @@ class _Timeout(object):
         self.__process.start()
         self.__timeout = self.__limit + time.time()
         while not self.ready:
-            time.sleep(0.01)
+            time.sleep(0.00)
         return self.value
 
     def cancel(self):
