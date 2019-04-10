@@ -95,7 +95,6 @@ class Game:
         self.valid_actions = valid_actions
         self.weights = weights
         self.round_state = round_state
-        #self.weights = weights
         self.emulator.set_game_rule(2,self.num_rounds,10,0)
 
     """ Check if game tree ends """
@@ -113,7 +112,6 @@ class Game:
 
         heuristics = [win_rate, amount_in_pot, 1]
         return np.dot(self.weights, heuristics)
-        #return self.weights * np.array([win_rate, amount_in_pot])
 
     def future_move(self, state):
         return state['next_player']
