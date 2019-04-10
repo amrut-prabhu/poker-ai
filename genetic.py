@@ -50,7 +50,7 @@ class Population(object):
             new_generation.append(new_ai)
         self.pop = new_generation
 
-        print("\nNew generation created!")
+        print("New generation created!\n")
         self.printWeights()
 
     def compute_fitness(self):
@@ -58,7 +58,7 @@ class Population(object):
         total_fitness = [0] * self.size
 
         for round in range(5):
-            print("Beginning population round {0}".format(round))
+            # print("Beginning population round {0}".format(round))
             tables = np.random.permutation(self.size)
 
             table1 = [(self.pop[i], i) for i in tables[:self.size//4]]
@@ -67,7 +67,7 @@ class Population(object):
             table4 = [(self.pop[i], i) for i in tables[3*self.size//4:]]
 
             round_fitness = add_all([self.play_round(table1), self.play_round(table2), self.play_round(table3), self.play_round(table4)])
-            print("The fitness totals for this round are: ", round_fitness)
+            print("The fitness totals for round {0} are: {1}".format(round, round_fitness))
 
             total_fitness = add_all([round_fitness, total_fitness])
         return total_fitness
@@ -83,14 +83,14 @@ class Population(object):
             # raise ValueError('The genetic algo fitness game has more than 2 players.')
 
         config = setup_config(max_round=MAX_ROUNDS, initial_stack=INITIAL_STACK, small_blind_amount=SMALL_BLIND_AMOUNT)
-        print("Setting up a new game")
+        # print("Setting up a new game")
 
         for player, num in players:
-            print("Registering player {0}".format(num))
+            # print("Registering player {0}".format(num))
             config.register_player(name=num, algorithm=player)
 
         results = start_poker(config, verbose=0)
-        print("The final results of the poker game are: ", results)
+        # print("The final results of the poker game are: ", results)
 
         fitnesses = [0] * self.size
         for player in results['players']:
@@ -99,11 +99,12 @@ class Population(object):
         return fitnesses
 
     def printWeights(self):
-        print([(p.default_weights) for p in self.pop])
+        print("Player Weights: {0}".format([(p.default_weights) for p in self.pop]))
         save_file = open("population.txt", "a+")
         save_file.write(str([(p.default_weights) for p in self.pop]))
         save_file.write("\n")
 
+################## CONSTANTS ##################
 # Game characteristics
 MAX_ROUNDS = 2
 INITIAL_STACK = 1000
@@ -112,9 +113,11 @@ SMALL_BLIND_AMOUNT = 10
 # Genetic Algorithm hyperparameters
 POPULATION_SIZE = 8 # Number of chromosomes
 NUM_EPOCHS = 3 # Number of times that selections occur
+###############################################
+
+open("population.txt", "w+") # Clear file each time we execute the algorithm
 
 population = Population(POPULATION_SIZE)
-open("population.txt", "w+") # Clear file each time we execute the algorithm
 population.printWeights()
 for epoch in range(NUM_EPOCHS):
 	print("Running epoch {0}".format(epoch))
