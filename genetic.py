@@ -12,7 +12,7 @@ def normalize(narray):
     """
     normalise to percentages
     """
-    return [narray/sum(narray)]
+    return narray/sum(narray)
 
 def add_all(list_of_lists):
     """
@@ -29,7 +29,7 @@ class Population(object):
         self.pop = []
         self.size = size
         for i in range(size):
-			# generate a random bot
+			# generate a random
             def_weights = normalize(init_def_weights * (1 + np.random.uniform(-0.25, 0.25, size=(1,3))))
             self.pop.append(MiniMaxPlayer(def_weights))
 
@@ -38,18 +38,19 @@ class Population(object):
         fitnesses = np.sqrt(self.compute_fitness())
         fitnesses = normalize(fitnesses)
 
-        new_generation = list(np.random.choice(self.pop, self.size/2, p=fitnesses, replace=False)) #these are the survivors of the Moran process.
-		
-        births = np.random.choice(self.pop, self.size - self.size/2, p=fitnesses, replace=True) #these are the new additions
-		
+        # these are the survivors of the Moran process.
+        new_generation = list(np.random.choice(self.pop, self.size/2, p=fitnesses, replace=False))
+        # these are the new additions
+        births = np.random.choice(self.pop, self.size - self.size/2, p=fitnesses, replace=True)
+
         for new_ai in births:
-            # Create mutations in chromosomes at uniform random 
+            # Create mutations in chromosomes at uniform random
             if np.random.uniform(0,1) > 0.75:
                 new_ai.mutate()
             new_generation.append(new_ai)
         self.pop = new_generation
 
-        print("New generation created!")
+        print("\nNew generation created!")
         self.printWeights()
 
     def compute_fitness(self):
@@ -59,29 +60,29 @@ class Population(object):
         for round in range(5):
             print("Beginning population round {0}".format(round))
             tables = np.random.permutation(self.size)
-            
+
             table1 = [(self.pop[i], i) for i in tables[:self.size//4]]
             table2 = [(self.pop[i], i) for i in tables[self.size//4:2*self.size//4]]
             table3 = [(self.pop[i], i) for i in tables[2*self.size//4:3*self.size//4]]
             table4 = [(self.pop[i], i) for i in tables[3*self.size//4:]]
-            
+
             round_fitness = add_all([self.play_round(table1), self.play_round(table2), self.play_round(table3), self.play_round(table4)])
             print("The fitness totals for this round are: ", round_fitness)
-            
+
             total_fitness = add_all([round_fitness, total_fitness])
         return total_fitness
 
     def play_round(self, players):
         """
-        Input: 
+        Input:
             players: a list of 2 tuples- (player, num) where num is the index of player in self.pop
-        Output: 
+        Output:
             a list of the 2 players' payoffs
         """
         # if (len(players) != 2):
             # raise ValueError('The genetic algo fitness game has more than 2 players.')
 
-        config = setup_config(max_round=20, initial_stack=1000, small_blind_amount=10)
+        config = setup_config(max_round=MAX_ROUNDS, initial_stack=INITIAL_STACK, small_blind_amount=SMALL_BLIND_AMOUNT)
         print("Setting up a new game")
 
         for player, num in players:
@@ -89,12 +90,12 @@ class Population(object):
             config.register_player(name=num, algorithm=player)
 
         results = start_poker(config, verbose=0)
-        print("The final result of the poker game is: ", results)
+        print("The final results of the poker game are: ", results)
 
         fitnesses = [0] * self.size
         for player in results['players']:
             fitnesses[player['name']] = player['stack']
-        
+
         return fitnesses
 
     def printWeights(self):
@@ -102,9 +103,14 @@ class Population(object):
         save_file = open("population.txt", "a+")
         save_file.write(str([(p.default_weights) for p in self.pop]))
 
+# Game characteristics
+MAX_ROUNDS = 2
+INITIAL_STACK = 1000
+SMALL_BLIND_AMOUNT = 10
 
-POPULATION_SIZE = 10 # Number of chromosomes
-NUM_EPOCHS = 5 # Number of times that selections occur
+# Genetic Algorithm hyperparameters
+POPULATION_SIZE = 8 # Number of chromosomes
+NUM_EPOCHS = 3 # Number of times that selections occur
 
 population = Population(POPULATION_SIZE)
 population.printWeights()
