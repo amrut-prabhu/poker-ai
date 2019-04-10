@@ -1,9 +1,7 @@
 class BasePokerPlayer(object):
   """Base Poker client implementation
-
   To create poker client, you need to override this class and
   implement following 7 methods.
-
   - declare_action
   - receive_game_start_message
   - receive_round_start_message
@@ -110,4 +108,3 @@ class BasePokerPlayer(object):
     hand_info = message["hand_info"]
     round_state = message["round_state"]
     return winners, hand_info, round_state
-
