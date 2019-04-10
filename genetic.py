@@ -29,8 +29,8 @@ class Population(object):
         self.pop = []
         self.size = size
         for i in range(size):
-			# generate a random
-            def_weights = normalize(init_def_weights * (1 + np.random.uniform(-0.25, 0.25, size=(1,3))))
+			# generate a random initial set of heuristic weights
+            def_weights = normalize(init_def_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
             self.pop.append(MiniMaxPlayer(def_weights))
 
     def birth_cycle(self):
@@ -102,6 +102,7 @@ class Population(object):
         print([(p.default_weights) for p in self.pop])
         save_file = open("population.txt", "a+")
         save_file.write(str([(p.default_weights) for p in self.pop]))
+        save_file.write("\n")
 
 # Game characteristics
 MAX_ROUNDS = 2
@@ -113,6 +114,7 @@ POPULATION_SIZE = 8 # Number of chromosomes
 NUM_EPOCHS = 3 # Number of times that selections occur
 
 population = Population(POPULATION_SIZE)
+open("population.txt", "w+") # Clear file each time we execute the algorithm
 population.printWeights()
 for epoch in range(NUM_EPOCHS):
 	print("Running epoch {0}".format(epoch))

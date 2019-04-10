@@ -18,6 +18,11 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
     def __init__(self, def_weights):
         """
         Input: Hyperparameters that govern play
+               
+               Heuristic weights (size = 3) for:
+                1. win rate
+                2. money in pot
+                3. opponent modelling 
         """
         BasePokerPlayer.__init__(self)
         self.default_weights = def_weights
@@ -26,7 +31,7 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
         """
         Mutate and change form!
         """
-        self.default_weights = normalize(self.default_weights * (1 + np.random.uniform(-0.25, 0.25, size=(1,3))))
+        self.default_weights = normalize(self.default_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
@@ -107,11 +112,8 @@ class Game:
         amount_in_pot = self.round_state['pot']['main']['amount']
 
         heuristics = [win_rate, amount_in_pot, 1]
-        print("weights ", self.weights)
-        print("heuristics ", heuristics)
-        print(np.dot(self.weights, heuristics))
+        return np.dot(self.weights, heuristics)
         #return self.weights * np.array([win_rate, amount_in_pot])
-        return (win_rate + amount_in_pot)
 
     def future_move(self, state):
         return state['next_player']
