@@ -62,7 +62,7 @@ def testperf(agent_name1, agent1, agent_name2, agent2):
         print("\n Congratulations! " + agent_name1 + " has won.")
     # print("\n Random Player has won!")
     else:
-        Print("\n It's a draw!")
+        print("\n It's a draw!")
 
 
 def parse_arguments():
