@@ -7,12 +7,37 @@ from pypokerengine.utils.game_state_utils import restore_game_state, attach_hole
 import numpy as np
 import time
 
+def normalize(narray):
+    """
+    normalise to percentages
+    """
+    return narray/sum(narray)
+
 class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
+
+    def __init__(self, def_weights):
+        """
+        Input: Hyperparameters that govern play
+               
+               Heuristic weights (size = 3) for:
+                1. win rate
+                2. money in pot
+                3. opponent modelling 
+        """
+        BasePokerPlayer.__init__(self)
+        self.default_weights = def_weights
+
+    def mutate(self):
+        """
+        Mutate and change form!
+        """
+        self.default_weights = normalize(self.default_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
         x = time.time()
         num_rounds = 35
+        uuid = 0
         for p in round_state['seats']:
             if (p['name'] == 'MiniMaxPlayer'):
                 uuid = p['uuid']
@@ -20,13 +45,13 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
         cards = list(map(lambda x: Card.from_str(x), hole_card))
         player = round_state['next_player']
         game_state = get_game_state(round_state, cards, uuid)
-        game = Game(cards,player,game_state, num_rounds, valid_actions,round_state)
+        game = Game(cards,player,game_state, num_rounds, valid_actions,round_state, self.default_weights)
         index = game.minimax(game_state, 1)
         #print("FINAL ACTION: "+str(valid_actions[index]))
         call_action_info = valid_actions[index]
         action = call_action_info["action"]
-        print("WHAT AM I DOING: "+action)
-        print(time.time() - x)
+        # print("WHAT AM I DOING: "+action)
+        # print(time.time() - x)
         return action
 
     def receive_game_start_message(self, game_info):
@@ -61,15 +86,15 @@ def get_game_state(round_state, hole_card, uuid):
 
 
 class Game:
-    def __init__(self, hole_card, player, state, num_rounds, valid_actions, round_state):
+    def __init__(self, hole_card, player, state, num_rounds, valid_actions, round_state, weights):
         self.hole_card = hole_card
         self.player = player
         self.init_state = state
         self.emulator = Emulator()
         self.num_rounds = num_rounds
         self.valid_actions = valid_actions
+        self.weights = weights
         self.round_state = round_state
-        #self.weights = weights
         self.emulator.set_game_rule(2,self.num_rounds,10,0)
 
     """ Check if game tree ends """
@@ -84,12 +109,9 @@ class Game:
     def eval_heuristics(self, player, state):
         win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
         amount_in_pot = self.round_state['pot']['main']['amount']
-        #if (self.player == player):
-        #return self.weights * np.array([win_rate, amount_in_pot])
-        # return (0.8* + 0.2*amount_in_pot)
-        return (win_rate + amount_in_pot)
 
-
+        heuristics = [win_rate, amount_in_pot, 1]
+        return np.dot(self.weights, heuristics)
 
     def future_move(self, state):
         return state['next_player']
@@ -121,5 +143,3 @@ class Game:
             return v
 
         return np.argmax(list(map(lambda a: min_value(self.project(newState, a),0),self.actions(newState))))
-
-
