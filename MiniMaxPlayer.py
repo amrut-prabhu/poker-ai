@@ -18,11 +18,11 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
     def __init__(self, def_weights):
         """
         Input: Hyperparameters that govern play
-               
+
                Heuristic weights (size = 3) for:
                 1. win rate
                 2. money in pot
-                3. opponent modelling 
+                3. opponent modelling
         """
         BasePokerPlayer.__init__(self)
         self.default_weights = def_weights
@@ -46,10 +46,10 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
         player = round_state['next_player']
         game_state = get_game_state(round_state, cards, uuid)
         game = Game(cards,player,game_state, num_rounds, valid_actions,round_state, self.default_weights)
-        index = game.minimax(game_state, 1)
+        action = game.minimax(game_state, 3)
         #print("FINAL ACTION: "+str(valid_actions[index]))
-        call_action_info = valid_actions[index]
-        action = call_action_info["action"]
+        #call_action_info = valid_actions[index]
+        #action = call_action_info["action"]
         # print("WHAT AM I DOING: "+action)
         # print(time.time() - x)
         return action
@@ -96,6 +96,7 @@ class Game:
         self.weights = weights
         self.round_state = round_state
         self.emulator.set_game_rule(2,self.num_rounds,10,0)
+        self.blah = 0
 
     """ Check if game tree ends """
     def terminal_test(self,state):
@@ -126,20 +127,40 @@ class Game:
         player = self.future_move(newState)
         inf = float('inf')
 
-        def min_value(newState, depth):
+        def min_value(newState,alpha,beta,depth):
             if depth== max_depth or self.terminal_test(newState):
+            #if self.terminal_test(newState):
                 return self.eval_heuristics(player, newState)
             v = inf
             for a in self.actions(newState):
-                v = min(max_value(self.project(newState, a),depth+1),v)
+                v = min(max_value(self.project(newState, a),alpha,beta, depth+1),v)
+                if v<=alpha:
+                    return v
+                beta = min(beta,v)
             return v
 
-        def max_value(newState, depth):
+        def max_value(newState,alpha,beta,depth):
             if depth == max_depth or self.terminal_test(newState):
+            #if self.terminal_test(newState):
                 return self.eval_heuristics(player, newState)
             v = -inf
             for a in self.actions(newState):
-                v = max(min_value(self.project(newState, a), depth+1),v)
+                v = max(min_value(self.project(newState, a), alpha,beta, depth+1),v)
+                if (v>=beta):
+                    return v
+                alpha = max(alpha,v)
             return v
 
-        return np.argmax(list(map(lambda a: min_value(self.project(newState, a),0),self.actions(newState))))
+        best_score = -inf
+        beta = inf
+        best_action = None
+        for a in self.actions(newState):
+            v = min_value(self.project(newState, a), best_score, beta,0)
+            if v > best_score:
+                best_score = v
+                best_action = a
+                #print("RES"+str(best_action))
+        return best_action
+
+        #a = np.argmax(list(map(lambda a: min_value(self.project(newState, a),0),self.actions(newState))))
+
