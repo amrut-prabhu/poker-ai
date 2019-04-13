@@ -39,7 +39,7 @@ def testperf(agent_name1, agent1, agent_name2, agent2):
 
     # Register players
     config.register_player(name=agent_name1, algorithm=RaisedPlayer())
-    config.register_player(name='MiniMaxPlayer', algorithm=MiniMaxPlayer(np.array([10,0.2,0.3])))
+    config.register_player(name='MiniMaxPlayer', algorithm=MiniMaxPlayer(np.array([105,0.03,0])))
     # config.register_player(name=agent_name1, algorithm=agent1())
     # config.register_player(name=agent_name2, algorithm=agent2())
 
