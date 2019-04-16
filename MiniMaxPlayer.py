@@ -46,7 +46,11 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
         player = round_state['next_player']
         game_state = get_game_state(round_state, cards, uuid)
         game = Game(cards,player,game_state, num_rounds, valid_actions,round_state, self.default_weights)
+<<<<<<< Updated upstream
         action = game.minimax(game_state, 3)
+=======
+        index = game.minimax(game_state, 10)
+>>>>>>> Stashed changes
         #print("FINAL ACTION: "+str(valid_actions[index]))
         #call_action_info = valid_actions[index]
         #action = call_action_info["action"]
