@@ -1,12 +1,13 @@
 from pypokerengine.players import BasePokerPlayer
 from pypokerengine.api.emulator import Emulator
 from pypokerengine.engine.card import Card
-from pypokerengine.utils.card_utils import estimate_hole_card_win_rate
+from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, _pick_unused_card, _fill_community_card
 from pypokerengine.api.game import setup_config, start_poker
 from pypokerengine.utils.game_state_utils import restore_game_state, attach_hole_card, attach_hole_card_from_deck
 from pypokerengine.engine.hand_evaluator import HandEvaluator
 import numpy as np
 import time
+import random
 
 def normalize(narray):
     """
@@ -30,72 +31,142 @@ IR2_K = [63, 79, 98, 116, 132, 151, 168, 200, 235, 249, 268, 647, 305]
 IR2_A = [146, 164, 180, 198, 198, 220, 240, 257, 291, 305, 323, 339, 704]
 IR2 = [IR2_2, IR2_3, IR2_4, IR2_5, IR2_6, IR2_7, IR2_8, IR2_9, IR2_10, IR2_J, IR2_Q, IR2_K, IR2_A]
 
+cardRankToStartIndex = {2:0,3:1,4:2,5:3,6:4,7:5,8:6,9:7,10:8,11:9,12:10,13:11,14:12}
+
+cardSuitToStartIndex = {2:0,4:1,8:2,16:3}
+
+def Map_169(c1, c2, toMap):
+    rank1 = c1.rank
+    rank2 = c2.rank
+    idx1 = cardRankToStartIndex[rank1]
+    idx2 = cardRankToStartIndex[rank2]
+
+    r1Greatest = rank1 > rank2
+    if(c1.suit == c2.suit):
+        return toMap[idx1][idx2] if r1Greatest else toMap[idx2][idx1]
+    else:
+        return toMap[idx2][idx1] if r1Greatest else toMap[idx1][idx2]
+
 def HandStrength(weight, hole_card, community_card):
-    ahead = tied = behind = 0
+    No_of_times = 2 # 3 for running alone without timeout
+    Ahead = Tied = Behind = 1
     ourrank = HandEvaluator.eval_hand(hole_card, community_card)
     # Consider all two card combinations of the remaining cards.
-    unused_cards = _pick_unused_card(2, hole_card + community_card)
+    unused_cards = _pick_unused_card(45, hole_card + community_card)
+
+    while(No_of_times>0):
+        oppcard1 = random.choice(unused_cards)
+        oppcard2 = random.choice(unused_cards)
+        if(oppcard1 != oppcard2):
+            # initial opponent hand value
+            oppcard = [oppcard1, oppcard2]
+            opprank = HandEvaluator.eval_hand(oppcard, community_card)
+            # enemy card weight
+            oppweight = (Map_169(oppcard1, oppcard2, weight)/3364.0)
+            # print(ourrank, opprank, oppweight)
+            if(ourrank>opprank): Ahead += oppweight
+            elif (ourrank==opprank): Tied += oppweight
+            else: Behind += oppweight # <
+            No_of_times = No_of_times - 1
+    """
+    for oppcard1 in unused_cards:
+        for oppcard2 in unused_cards:
+            if(oppcard1 != oppcard2):
+                # initial opponent hand value
+                oppcard = [oppcard1, oppcard2]
+                opprank = HandEvaluator.eval_hand(oppcard, community_card)
+                # enemy card weight
+                oppweight = (Map_169(oppcard1, oppcard2, weight)/3364.0)
+                # print(ourrank, opprank, oppweight)
+                if(ourrank>opprank): Ahead += oppweight
+                elif (ourrank==opprank): Tied += oppweight
+                else: Behind += oppweight # <
+                No_of_times = No_of_times - 1
     oppcards = [unused_cards[2*i:2*i+2] for i in range(1)]
-    for oppcard in oppcards:
-        # initial opponent hand value
-        opprank = HandEvaluator.eval_hand(oppcard, community_card)
-        # enemy card weight
-        oppweight = HandRanker.Map_169(oppcard[0], oppcard[1], weight)
-        if(ourrank>opprank): ahead += oppweight
-        elif (ourrank==opprank): tied += oppweight
-        else: behind += oppweight # <
-    handstrength = (ahead+tied/2)/(ahead+tied+behind)
+    """
+    handstrength = (Ahead+Tied/2)/(Ahead+Tied+Behind)
     return handstrength
 
 def HandPotential(weight, hole_card, community_card):
     ahead = 0
     tied = 1
     behind = 2
+    No_of_times = 2 # 2 very good for running alone without timeout but 3 has few
     # Hand potential array, each index represents ahead, tied, and behind.
-    HP = [[0 for x in range(3)] for y in range(3)] # initialize to 0 
+    HP = [[1 for x in range(3)] for y in range(3)] # initialize to 0 
     HPTotal = [0 for x in range(3)] # initialize to 0 
     ourrank = HandEvaluator.eval_hand(hole_card, community_card)
     # Consider all two card combinations of the remaining cards for the opponent.
-    unused_cards = _pick_unused_card(2, hole_card + community_card)
+    community_card = _fill_community_card(community_card, used_card=hole_card+community_card)
+    unused_cards = _pick_unused_card(45, hole_card + community_card)
+    while(No_of_times>0):
+        oppcard1 = random.choice(unused_cards)
+        oppcard2 = random.choice(unused_cards)
+        turn = random.choice(unused_cards)
+        river = random.choice(unused_cards)
+        if(oppcard1 != oppcard2 != turn != river):
+            # initial opponent hand value
+            oppcard = [oppcard1, oppcard2]
+            opprank = HandEvaluator.eval_hand(oppcard, community_card)
+            # enemy card weight
+            oppweight = (Map_169(oppcard1, oppcard2, weight)/3364.0)
+            if(ourrank>opprank): index = ahead
+            elif(ourrank==opprank): index = tied
+            else: index = behind # < 
+            HPTotal[index] += oppweight
+            # Final 5-card board 
+            board = community_card
+            board.append(turn)
+            board.append(river)
+            ourbest = HandEvaluator.eval_hand(hole_card,board)
+            oppbest = HandEvaluator.eval_hand(oppcard,board)
+            if(ourbest>oppbest): HP[index][ahead] +=oppweight
+            elif(ourbest==oppbest): HP[index][tied] +=oppweight
+            else: HP[index][behind] +=oppweight # <
+            No_of_times = No_of_times - 1
+    """
     oppcards = [unused_cards[2*i:2*i+2] for i in range(1)]
     for oppcard in oppcards:
         # initial opponent hand value
         opprank = HandEvaluator.eval_hand(oppcard, community_card)
         # enemy card weight
-        oppweight = HandRanker.Map_169(oppcard[0], oppcard[1], weight)
+        oppweight = Map_169(oppcard[0], oppcard[1], weight)
         if(ourrank>opprank): index = ahead
         elif(ourrank==opprank): index = tied
         else: index = behind # < 
         HPTotal[index] += oppweight
-        unused_cards_postflop = _pick_unused_card(2, hole_card + community_card + oppcard)
-        turn = unused_cards_postflop[0]
-        unused_cards_postturn = _pick_unused_card(2, hole_card + community_card + oppcard + turn)
-        river = unused_cards_postturn[0]
+        hand = hole_card + community_card
+        #community_card = _fill_community_card(community_card, used_card=hand.append(oppcard))
+        #hand = hand.append(oppcard)
+        new_unused_cards = _pick_unused_card(2, hand)
+        other_cards = [new_unused_cards[2*i:2*i+2] for i in range(1)]
         # All possible board cards to come. 
-        for turn_card in turn:
-            for river_card in river:
-                # Final 5-card board 
-                board = community_card+turn+river
-                ourbest = HandEvaluator.eval_hand(hole_card,board)
-                oppbest = HandEvaluator.eval_hand(oppcard,board)
-                if(ourbest>oppbest): HP[index][ahead] +=oppweight
-                elif(ourbest==oppbest): HP[index][tied] +=oppweight
-                else: HP[index][behind] +=oppweight # <
+        for turn_and_river in other_cards:
+            # Final 5-card board 
+            board = community_card + turn_and_river
+            ourbest = HandEvaluator.eval_hand(hole_card,board)
+            oppbest = HandEvaluator.eval_hand(oppcard,board)
+            if(ourbest>oppbest): HP[index][ahead] +=oppweight
+            elif(ourbest==oppbest): HP[index][tied] +=oppweight
+            else: HP[index][behind] +=oppweight # <
+    """
     sumBehind = HP[behind][ahead] + HP[behind][tied] + HP[behind][behind] 
     sumTied = HP[tied][ahead] + HP[tied][tied] + HP[tied][behind]
     sumAhead = HP[ahead][ahead] + HP[ahead][tied] + HP[ahead][behind]
     # Ppot: were behind but moved ahead. 
     Ppot = (HP[behind][ahead]+HP[behind][tied]/2+HP[tied][ahead]/2)/ (sumBehind+sumTied/2)
     # Npot: were ahead but fell behind. 
-    Npot = (HP[ahead][behind]+HP[tied][behind]/2+HP[ahead][tied]/2)/ (sumAhead+sumTied/2)
-    printStats(HPTotal, HP)
+    # Npot = (HP[ahead][behind]+HP[tied][behind]/2+HP[ahead][tied]/2)/ (sumAhead+sumTied/2)
+    # printStats(HPTotal, HP)
     return Ppot
 
 def EffectiveHandStrength(oppcards, boardcards):
     weight = IR2
     HS = HandStrength(weight, oppcards, boardcards)
     Ppot = HandPotential(weight, oppcards, boardcards)
-    return (HS + (1 - HS)*Ppot)
+    EHS = (HS + (1 - HS)*Ppot)
+    #print(HS, Ppot, EHS)
+    return EHS
 
 # Debug
 def printStats(HPTotal, HP):
@@ -106,33 +177,33 @@ def printStats(HPTotal, HP):
     sumTied = HP[tied][ahead] + HP[tied][tied] + HP[tied][behind]
     sumAhead = HP[ahead][ahead] + HP[ahead][tied] + HP[ahead][behind]
     print("Handstrength (current board):")
-    print("Ahead weighted sum: " + HPTotal[ahead])
-    print("Behind weighted sum: " + HPTotal[behind])
-    print("Tied weighted sum: " + HPTotal[tied])
+    print("Ahead weighted sum: ", HPTotal[ahead])
+    print("Behind weighted sum: ", HPTotal[behind])
+    print("Tied weighted sum: ", HPTotal[tied])
     hs = (HPTotal[ahead]+HPTotal[tied]/2) / (HPTotal[ahead]+HPTotal[behind]+HPTotal[tied])
-    print("Handstrength one opponent: " + hs)
+    print("Handstrength one opponent: ", hs)
             
     print("TRANSITIONS (currently ahead)")
-    print("Total simulations sarting ahead: " + sumAhead)
-    print("Ahead-Ahead: " + HP[ahead][ahead])
-    print("Ahead-Tied: " + HP[ahead][tied])
-    print("Ahead-Behind: " + HP[ahead][behind])
+    print("Total simulations sarting ahead: ", sumAhead)
+    print("Ahead-Ahead: ", HP[ahead][ahead])
+    print("Ahead-Tied: ", HP[ahead][tied])
+    print("Ahead-Behind: ", HP[ahead][behind])
             
     print("TRANSITIONS (currently behind)")
-    print("Total simulations sarting behind: " + sumBehind)
-    print("Behind-Ahead: " + HP[behind][ahead])
-    print("Behind-Tied: " + HP[behind][tied])
-    print("Behind-Behind" + HP[behind][behind])
+    print("Total simulations sarting behind: ", sumBehind)
+    print("Behind-Ahead: ", HP[behind][ahead])
+    print("Behind-Tied: ", HP[behind][tied])
+    print("Behind-Behind", HP[behind][behind])
         
     print("TRANSITIONS (currently tied)")
-    print("Total simulations sarting tied: " + sumTied)
-    print("Tied-Ahead: " + HP[tied][ahead])
-    print("Tied-Tied: " + HP[tied][tied])
-    print("Tied-Behind: "+ HP[tied][behind])
+    print("Total simulations sarting tied: ", sumTied)
+    print("Tied-Ahead: ", HP[tied][ahead])
+    print("Tied-Tied: ", HP[tied][tied])
+    print("Tied-Behind: ", HP[tied][behind])
 
 class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
-    def __init__(self):
+    def __init__(self, def_weights):
         """
         Input: Hyperparameters that govern play
 
@@ -142,7 +213,7 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
                 3. opponent modelling
         """
         BasePokerPlayer.__init__(self)
-        #self.default_weights = def_weights
+        self.default_weights = def_weights
 
     def mutate(self):
         """
