@@ -48,7 +48,7 @@ def Map_169(c1, c2, toMap):
         return toMap[idx2][idx1] if r1Greatest else toMap[idx1][idx2]
 
 def HandStrength(weight, hole_card, community_card):
-    No_of_times = 2 # 3 for running alone without timeout
+    No_of_times = 5 # numround = 35 - 3 for running alone without timeout, 2 for running together
     Ahead = Tied = Behind = 1
     ourrank = HandEvaluator.eval_hand(hole_card, community_card)
     # Consider all two card combinations of the remaining cards.
@@ -91,7 +91,7 @@ def HandPotential(weight, hole_card, community_card):
     ahead = 0
     tied = 1
     behind = 2
-    No_of_times = 2 # 2 very good for running alone without timeout but 3 has few
+    No_of_times = 13 # numround = 35 - 2 very good for running alone and together without timeout but 3 has few
     # Hand potential array, each index represents ahead, tied, and behind.
     HP = [[1 for x in range(3)] for y in range(3)] # initialize to 0 
     HPTotal = [0 for x in range(3)] # initialize to 0 
@@ -224,7 +224,7 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
         x = time.time()
-        num_rounds = 35
+        num_rounds = 15
         uuid = 0
         for p in round_state['seats']:
             if (p['name'] == 'MiniMaxPlayer'):
