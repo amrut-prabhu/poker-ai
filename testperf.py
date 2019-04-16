@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from randomplayer import RandomPlayer
 from MiniMaxPlayer import MiniMaxPlayer
 from raise_player import RaisedPlayer
+import numpy as np
 
 # from smartwarrior import SmartWarrior
 """ ========================================================= """
@@ -38,7 +39,7 @@ def testperf(agent_name1, agent1, agent_name2, agent2):
 
     # Register players
     config.register_player(name=agent_name1, algorithm=RaisedPlayer())
-    config.register_player(name='MiniMaxPlayer', algorithm=MiniMaxPlayer())
+    config.register_player(name='MiniMaxPlayer', algorithm=MiniMaxPlayer(np.array([105,0.03,0])))
     # config.register_player(name=agent_name1, algorithm=agent1())
     # config.register_player(name=agent_name2, algorithm=agent2())
 
