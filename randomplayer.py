@@ -44,12 +44,12 @@ class RandomPlayer(BasePokerPlayer):
 
   def receive_round_result_message(self, winners, hand_info, round_state):
     # print("My ID (round result) : "+self.uuid)
-    # pprint.pprint(round_state)
+    pprint.pprint(round_state)
     # print("\n\n")
     # self.round_count = self.round_count + 1
-    print("Random Player")
-    pprint.pprint(hand_info)
-    print('\n')
+    # print("Random Player")
+    # pprint.pprint(hand_info)
+    # print('\n')
     pass
 
 def setup_ai():
