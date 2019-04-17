@@ -22,11 +22,15 @@ INITIAL_STACK = 1000
 SMALL_BLIND_AMOUNT = 10
 
 # Genetic Algorithm hyperparameters
-POPULATION_SIZE = 6#200 # Number of chromosomes
-GENERATIONS = 2#300 # Number of times that selections occur
+## NOTE!!!!!: 
+## POPULATION_SIZE should be multiple of 10
+## PLAYERS_PER_TABLE should be a factor of POPULATION_SIZE
 
-PLAYERS_PER_TABLE = 3#4 # factor of POPULATION_SIZE
-TABLES = POPULATION_SIZE // PLAYERS_PER_TABLE
+POPULATION_SIZE = 10#200 # Number of chromosomes
+GENERATIONS = 5#300 # Number of times that selections occur
+
+PLAYERS_PER_TABLE = 2#4 
+TABLES = int(POPULATION_SIZE / PLAYERS_PER_TABLE)
 ###############################################
 
 def main():
@@ -60,6 +64,8 @@ def main():
         # STEP 4: Reproduce with 80% crossover, 10% mutation, and 10% elitism
         # new population becomes the result of reproduction
 
+        # print("Init size: " + str(len(population)))
+
         # start with no children
         population = []
 
@@ -69,12 +75,14 @@ def main():
             population.append(mutate(parents))
 
         # elitism 10% of the time:
-        for i in range(int(.1 * POPULATION_SIZE) - 1):
+        for i in range(int(.1 * POPULATION_SIZE)):
             population.append(elitism(parents))
 
         # crossover 80%
         for i in range(int(.8 * POPULATION_SIZE)):
             population.append(crossover(parents))
+
+        # print("Final size: " + str(len(population)))
 
     print("Final generation")
     calculatePopulationFitness(population, POPULATION_SIZE, GENERATIONS)
@@ -96,6 +104,11 @@ def calculatePopulationFitness(population, populationSize, gen):
     order = np.random.permutation(populationSize)
     for table in range(TABLES):
         # print("Beginning population round {0}".format(round))
+
+        # print(len(population))
+        # print(len(order))
+        # print(table*PLAYERS_PER_TABLE)
+        # print(table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE)
 
         # Calculate fitnesses for the players in this round
         players = [(population[i], i) for i in order[table*PLAYERS_PER_TABLE : table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE]]
@@ -172,11 +185,22 @@ def elitism(parents):
 # creates a child that is a combination of both parents
 def crossover(parents):
     # pick two random parents
-    parent1 = parents[random.randrange(0, len(parents/2))] # First parent is randomly chosen from the first half (fittest parents)
+    j = random.randrange(0, len(parents)//2 + 1)
+    # print(len(parents)//2)
+    # print(j)
+    parent1 = parents[j] # First parent is randomly chosen from the first half (fittest parents)
     parent2 = parents[random.randrange(0, len(parents))]
 
-    index = random.randrange(0,4)
-    child = hand(parent1.cards[0:index] + parent2.cards[index:5])
+    index = random.randrange(0,3)
+    new_weights = []
+
+    for i in range(index):
+        new_weights.append(parent1.weights[i])
+
+    for i in range(3-index):
+        new_weights.append(parent2.weights[i])
+
+    child = MiniMaxPlayer(np.array(new_weights))
     
     return child
 
