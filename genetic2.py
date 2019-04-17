@@ -200,7 +200,7 @@ def crossover(parents):
     for i in range(3-index):
         new_weights.append(parent2.weights[i])
 
-    child = MiniMaxPlayer(np.array(new_weights))
+    child = MiniMaxPlayer(normalize(np.array(new_weights)))
     
     return child
 
