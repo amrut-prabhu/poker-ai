@@ -17,7 +17,7 @@ def normalize_list(list):
 
 ################## CONSTANTS ##################
 # Game characteristics
-MAX_GAME_ROUNDS = 5#10
+MAX_GAME_ROUNDS = 10#10
 INITIAL_STACK = 1000
 SMALL_BLIND_AMOUNT = 10
 
@@ -26,8 +26,8 @@ SMALL_BLIND_AMOUNT = 10
 ## POPULATION_SIZE should be multiple of 10
 ## PLAYERS_PER_TABLE should be a factor of POPULATION_SIZE
 
-POPULATION_SIZE = 10#200 # Number of chromosomes
-GENERATIONS = 5#300 # Number of times that selections occur
+POPULATION_SIZE = 100#200 # Number of chromosomes
+GENERATIONS = 20#300 # Number of times that selections occur
 
 PLAYERS_PER_TABLE = 2#4 
 TABLES = int(POPULATION_SIZE / PLAYERS_PER_TABLE)
@@ -43,6 +43,8 @@ def main():
 
     # loop through generations
     for gen in range(GENERATIONS):
+        # displayGeneration(gen, population)
+
         # STEP 2: Calculate fitness of each MiniMaxPlayer and average population fitness
         probabilityList = calculatePopulationFitness(population, POPULATION_SIZE, gen)
 
@@ -50,9 +52,6 @@ def main():
 
         # sort in reverse order of fitness
         population.sort(key=lambda hand: hand.fitness, reverse=True)
-
-        for player in population:
-            print(player.__str__()) 
 
         # choose parents
         parents = []
@@ -85,7 +84,13 @@ def main():
         # print("Final size: " + str(len(population)))
 
     print("Final generation")
+    displayGeneration(gen+1, population)    
     calculatePopulationFitness(population, POPULATION_SIZE, GENERATIONS)
+
+def displayGeneration(genNum, population):
+    print("Generation #" + str(genNum) + ":")
+    for player in population:
+        print(player.__str__()) 
 
 def calculatePopulationFitness(population, populationSize, gen):
     """
@@ -134,7 +139,8 @@ def calculatePopulationFitness(population, populationSize, gen):
 
     total_fitness = sum(odds_list)
     print('Fitness Score for Generation #' + str(gen) + ' = ' + str(total_fitness / populationSize))
-    print('    Maximum fitness is ' + str(max_fitness) + " for the player " + max_fitness_player.__str__())
+    print('    Maximum fitness is for the player with ' + population[max_fitness_player].__str__())
+    print
 
     return probability_list
 
@@ -143,7 +149,7 @@ def play_round(players):
     Input:
         players: a list tuples- (player, num) where num is the index of player in population
     Output:
-        a list of the players' payoff probabilities
+        a list of the players' order and their corresponding payoff probabilities
     """
     config = setup_config(max_round=MAX_GAME_ROUNDS, initial_stack=INITIAL_STACK, small_blind_amount=SMALL_BLIND_AMOUNT)
     # print("Setting up a new game")
