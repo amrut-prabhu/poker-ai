@@ -247,7 +247,7 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
 
         uuid = 0
         for p in round_state['seats']:
-            if (p['name'] == 'MiniMaxPlayer'):
+            if (p['name'] == 'Group02Player'):
                 uuid = p['uuid']
 
         cards = list(map(lambda x: Card.from_str(x), hole_card))

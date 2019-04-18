@@ -3,7 +3,7 @@ from numpy.random import choice # used to make a weighted random choice for pare
 import random # random number generator
 import copy # create copy of object
 import numpy as np
-from MiniMaxPlayer import Group02Player
+from Group02Player import Group02Player
 from pypokerengine.api.game import setup_config, start_poker
 
 def normalize(narray):
@@ -45,7 +45,7 @@ def main():
     for gen in range(GENERATIONS):
         # displayGeneration(gen, population)
 
-        # STEP 2: Calculate fitness of each MiniMaxPlayer and average population fitness
+        # STEP 2: Calculate fitness of each Group02Player and average population fitness
         probabilityList = calculatePopulationFitness(population, POPULATION_SIZE, gen)
 
         # STEP 3: Select parents for next generation
@@ -94,13 +94,13 @@ def displayGeneration(genNum, population):
 
 def calculatePopulationFitness(population, populationSize, gen):
     """
-    Calculate the fitness of each MiniMaxPlayer in the population
+    Calculate the fitness of each Group02Player in the population
     Calculate and print average fitness of the population
-    Determine and print the MiniMaxPlayer that has the maximum fitness
+    Determine and print the Group02Player that has the maximum fitness
     """
-    max_fitness = -float("inf") # maximum fitness of a MiniMaxPlayer
-    max_fitness_player = population[0] # MiniMaxPlayer that has the maximum fitness
-    odds_list = [] # list of probabilities associated with a MiniMaxPlayer .. needed to make the choice of parents
+    max_fitness = -float("inf") # maximum fitness of a Group02Player
+    max_fitness_player = population[0] # Group02Player that has the maximum fitness
+    odds_list = [] # list of probabilities associated with a Group02Player .. needed to make the choice of parents
 
     # Divide all the players to play in tables of 4.
     total_fitness = [0] * populationSize
