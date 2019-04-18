@@ -91,7 +91,7 @@ def HandPotential(weight, hole_card, community_card):
     ahead = 0
     tied = 1
     behind = 2
-    No_of_times = 13 # numround = 35 - 2 very good for running alone and together without timeout but 3 has few
+    No_of_times = 5 # numround = 35 - 2 very good for running alone and together without timeout but 3 has few
     # Hand potential array, each index represents ahead, tied, and behind.
     HP = [[1 for x in range(3)] for y in range(3)] # initialize to 0 
     HPTotal = [0 for x in range(3)] # initialize to 0 
@@ -203,7 +203,7 @@ def printStats(HPTotal, HP):
 
 class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
-    def __init__(self, def_weights):
+    def __init__(self, def_weights = None):
         """
         Input: Hyperparameters that govern play
 
@@ -213,18 +213,30 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
                 3. opponent modelling
         """
         BasePokerPlayer.__init__(self)
-        self.default_weights = def_weights
+
+        self.fitness = -1
+        init_starting_weights = np.array([105,0.03,0])
+        if def_weights is None:
+            self.weights = normalize(init_starting_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
+        else:
+            self.weights = def_weights
+
+    def __str__(self):
+        return str("P weights: " + str([round(float(i), 6) for i in self.weights]) + " fitness: " + str(self.fitness))
+
+    def set_fitness(self, fit):
+        self.fitness = fit
 
     def mutate(self):
         """
         Mutate and change form!
         """
-        self.default_weights = normalize(self.default_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
+        self.weights = normalize(self.weights * (1 + np.random.uniform(-0.3, 0.3, size=3)))
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
         x = time.time()
-        num_rounds = 15
+        num_rounds = 50
         uuid = 0
         for p in round_state['seats']:
             if (p['name'] == 'MiniMaxPlayer'):
@@ -233,7 +245,7 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
         cards = list(map(lambda x: Card.from_str(x), hole_card))
         player = round_state['next_player']
         game_state = get_game_state(round_state, cards, uuid)
-        game = Game(cards,player,game_state, num_rounds, valid_actions,round_state, self.default_weights)
+        game = Game(cards,player,game_state, num_rounds, valid_actions,round_state, self.weights)
         action = game.minimax(game_state, 3)
         #print("FINAL ACTION: "+str(valid_actions[index]))
         #call_action_info = valid_actions[index]
