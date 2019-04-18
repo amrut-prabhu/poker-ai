@@ -1,6 +1,6 @@
 ## A genetic algorithm for finding optimal weights for the Group02Player heuristics
 from pypokerengine.api.game import setup_config, start_poker
-from Group02Player import Group02Player
+from Group02PlayerConfig import Group02Player
 import numpy as np
 
 """
