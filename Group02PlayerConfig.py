@@ -10,11 +10,12 @@ import time
 import random
 
 MINIMAX_DEPTH = 2
-NUM_ROUNDS = 50 # num rounds in MiniMax Game?
+NUM_ROUNDS = 25 # num rounds in MiniMax Game?
 
 isDebug = False
-isActionTimed = True # either enable isActionTimed or isHeuristicTimed? (not both together?)
-isHeuristicTimed = False        
+isActionTimed = False # either enable isActionTimed or isHeuristicTimed? (not both together?)
+isHeuristicTimed = False 
+
 
 def normalize(narray):
     """
@@ -233,6 +234,9 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
 
     def set_fitness(self, fit):
         self.fitness = fit
+
+    def get_fitness(self):
+        return self.fitness
 
     def mutate(self):
         """

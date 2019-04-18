@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 """ =========== *Remember to import your agent!!! =========== """
 from randomplayer import RandomPlayer
-from Group02Player import Group02Player
+from Group02PlayerConfig import Group02Player
 from raise_player import RaisedPlayer
 import numpy as np
 
