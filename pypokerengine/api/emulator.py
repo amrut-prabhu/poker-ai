@@ -36,6 +36,7 @@ class Emulator(object):
         # Wrap the function with a timeout
         default_action_info      = ("fold",0)  # Fold
         player.declare_action = timeout2(0.5,default_action_info)(player.declare_action)
+        # player.declare_action = timeout2(defaultretval=default_action_info)(player.declare_action)
         
         self.players_holder[uuid] = player
 
