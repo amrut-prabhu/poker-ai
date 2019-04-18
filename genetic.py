@@ -1,6 +1,6 @@
-## A genetic algorithm for finding optimal weights for the MiniMaxPlayer heuristics
+## A genetic algorithm for finding optimal weights for the Group02Player heuristics
 from pypokerengine.api.game import setup_config, start_poker
-from MiniMaxPlayer import MiniMaxPlayer
+from Group02Player import Group02Player
 import numpy as np
 
 """
@@ -31,7 +31,7 @@ class Population(object):
         for i in range(size):
 			# generate a random initial set of heuristic weights
             def_weights = normalize(init_def_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
-            self.pop.append(MiniMaxPlayer(def_weights))
+            self.pop.append(Group02Player(def_weights))
 
     def birth_cycle(self):
         """ Conduct a full Moran process, storing the relative fitnesses in a file """

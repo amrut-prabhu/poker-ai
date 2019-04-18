@@ -9,6 +9,13 @@ import numpy as np
 import time
 import random
 
+MINIMAX_DEPTH = 2
+NUM_ROUNDS = 50 # num rounds in MiniMax Game?
+
+isDebug = False
+isActionTimed = True # either enable isActionTimed or isHeuristicTimed? (not both together?)
+isHeuristicTimed = False        
+
 def normalize(narray):
     """
     normalise to percentages
@@ -201,7 +208,7 @@ def printStats(HPTotal, HP):
     print("Tied-Tied: ", HP[tied][tied])
     print("Tied-Behind: ", HP[tied][behind])
 
-class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
+class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
     def __init__(self, def_weights = None):
         """
@@ -231,27 +238,41 @@ class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "
         """
         Mutate and change form!
         """
-        self.weights = normalize(self.weights * (1 + np.random.uniform(-0.3, 0.3, size=3)))
+        self.weights = normalize(self.weights * (1 + np.random.uniform(-0.2, 0.2, size=3)))
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
-        x = time.time()
-        num_rounds = 50
+        if isActionTimed:      
+            start = time.time()
+
         uuid = 0
         for p in round_state['seats']:
-            if (p['name'] == 'MiniMaxPlayer'):
+            if (p['name'] == 'Group02Player'):
                 uuid = p['uuid']
 
         cards = list(map(lambda x: Card.from_str(x), hole_card))
         player = round_state['next_player']
         game_state = get_game_state(round_state, cards, uuid)
-        game = Game(cards,player,game_state, num_rounds, valid_actions,round_state, self.weights)
-        action = game.minimax(game_state, 3)
+        game = Game(cards,player,game_state, NUM_ROUNDS, valid_actions,round_state, self.weights)
+        
+        if isDebug:
+            print("Getting action...")
+        
+        action = game.minimax(game_state, MINIMAX_DEPTH)
+        
+        if isDebug:
+            print("================Action selected...")
+
+        if isActionTimed:
+            end = time.time()
+            print("..............Action selected in TIME: " + str(end - start) + " secs")
+
         #print("FINAL ACTION: "+str(valid_actions[index]))
         #call_action_info = valid_actions[index]
         #action = call_action_info["action"]
         # print("WHAT AM I DOING: "+action)
         # print(time.time() - x)
+        
         return action
 
     def receive_game_start_message(self, game_info):
@@ -307,9 +328,24 @@ class Game:
         return temp
 
     def eval_heuristics(self, player, state):
+        if isDebug:        
+            print("Evaluating heuristics")
+        if isHeuristicTimed:        
+            start = time.time()
+            print(time.time())
+
         win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
+        # print("1. Win rate done")        
         amount_in_pot = self.round_state['pot']['main']['amount']
+        # print("2. Amount in pot done")        
         EHS = EffectiveHandStrength(self.hole_card, state['table']._community_card)
+        # print("3. Hand strength done")
+        # time.sleep(0.2)
+        # if isDebug:
+            # print("=======Got heuristics") 
+        if isHeuristicTimed:
+            end = start = time.time()
+            print("==========Got heuristics in time: " + str(end-start) + " secs")
 
         heuristics = [win_rate, amount_in_pot, EHS]
         res =np.dot(self.weights, heuristics)
@@ -330,6 +366,9 @@ class Game:
         inf = float('inf')
 
         def min_value(newState,alpha,beta,depth):
+            if isDebug:
+                print("In MIN")
+        
             if depth== max_depth or self.terminal_test(newState):
             #if self.terminal_test(newState):
                 return self.eval_heuristics(player, newState)
@@ -342,6 +381,9 @@ class Game:
             return v
 
         def max_value(newState,alpha,beta,depth):
+            if isDebug:
+                print("In MAX")
+        
             if depth == max_depth or self.terminal_test(newState):
             #if self.terminal_test(newState):
                 return self.eval_heuristics(player, newState)
