@@ -19,21 +19,21 @@ def normalize_list(list):
     return [float(i)/sum(list) for i in list]
 
 ################## CONSTANTS ##################
-# Game characteristics
-MAX_GAME_ROUNDS = 1#10
+# Game characteristics for determining relative fitnesses of players
+MAX_GAME_ROUNDS = 3#10
 INITIAL_STACK = 10000
 SMALL_BLIND_AMOUNT = 20
 
 # Genetic Algorithm hyperparameters
 ## NOTE!!!!!: 
 ## POPULATION_SIZE should be multiple of 10
-## PLAYERS_PER_TABLE should be a factor of POPULATION_SIZE
+## @deprecated PLAYERS_PER_TABLE should be a factor of POPULATION_SIZE
 
 POPULATION_SIZE = 10#200 # Number of chromosomes
-GENERATIONS = 5#300 # Number of times that selections occur
+GENERATIONS = 10#300 # Number of times that selections occur
 
-PLAYERS_PER_TABLE = 2#4 
-TABLES = int(POPULATION_SIZE / PLAYERS_PER_TABLE)
+PLAYERS_PER_TABLE = 2 #4 
+TABLES = POPULATION_SIZE - PLAYERS_PER_TABLE + 1 #int(POPULATION_SIZE / PLAYERS_PER_TABLE)
 ###############################################
 
 def main():
@@ -118,8 +118,7 @@ def calculatePopulationFitness(population, populationSize, gen):
     max_fitness_player = population[0] # Group02Player that has the maximum fitness
     odds_list = [] # list of probabilities associated with a Group02Player .. needed to make the choice of parents
 
-    # Divide all the players to play in tables of 4.
-    total_fitness = [0] * populationSize
+    # total_fitness = [0] * populationSize
 
     # Create a random order of players
     order = np.random.permutation(populationSize)
@@ -131,17 +130,31 @@ def calculatePopulationFitness(population, populationSize, gen):
         # print(table*PLAYERS_PER_TABLE)
         # print(table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE)
 
-        # Calculate fitnesses for the players in this round
-        players = [(population[i], i) for i in order[table*PLAYERS_PER_TABLE : table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE]]
+        # Calculate fitnesses for the players in this table round
+        # players = [(population[i], i) for i in order[table*PLAYERS_PER_TABLE : table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE]]
+        players = [(population[i], i) for i in order[table : table+PLAYERS_PER_TABLE]]
         players, probabilities = play_round(players)
 
         # print(probabilities)
-        for idx in players:
-            population[idx].set_fitness(probabilities[players.index(idx)])
+        for num in players:
+            old_fitness = population[num].get_fitness()
+            
+            if old_fitness == -1 or table == 0:
+                new_fitness = probabilities[players.index(num)]
+            else:
+                new_fitness = (old_fitness + probabilities[players.index(num)])/2
+
+            population[num].set_fitness(new_fitness)
             # print(population[idx].__str__()) 
 
         # Add the table's probabilities to the total list
-        odds_list.extend(probabilities)
+        if table == 0:
+            odds_list.extend(probabilities)
+        else:
+            # print(len(odds_list))
+            # print(len(probabilities))
+            odds_list.pop()
+            odds_list.extend(probabilities)
 
         # Update max fitness if max of current round is higher 
         round_max_fitness = max(probabilities)
@@ -154,8 +167,9 @@ def calculatePopulationFitness(population, populationSize, gen):
     probability_list.sort(reverse=True)
 
     total_fitness = sum(odds_list)
-    print('Mean fitness Score for Generation #' + str(gen) + ' = ' + str(total_fitness / populationSize))
-    print('    Maximum fitness is for the player with ' + population[max_fitness_player].__str__())
+    print("Generation #" + str(gen) + ":")
+    print("    Mean fitness Score = " + str(total_fitness / populationSize))
+    print("    Max fitness is " + population[max_fitness_player].__str__())
     print
 
     return probability_list
@@ -165,7 +179,8 @@ def play_round(players):
     Input:
         players: a list of PLAYERS_PER_TABLE tuples- (player, num) where num is the index of player in population
     Output:
-        a list of the players' order and their corresponding payoff probabilities
+        - order of the players
+        - their corresponding payoff probabilities
     """
     config = setup_config(max_round=MAX_GAME_ROUNDS, initial_stack=INITIAL_STACK, small_blind_amount=SMALL_BLIND_AMOUNT)
     # print("Setting up a new game")
