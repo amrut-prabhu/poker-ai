@@ -208,7 +208,7 @@ def printStats(HPTotal, HP):
     print("Tied-Tied: ", HP[tied][tied])
     print("Tied-Behind: ", HP[tied][behind])
 
-class MiniMaxPlayer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
+class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
     def __init__(self, def_weights = None):
         """

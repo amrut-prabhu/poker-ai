@@ -3,7 +3,7 @@ from numpy.random import choice # used to make a weighted random choice for pare
 import random # random number generator
 import copy # create copy of object
 import numpy as np
-from MiniMaxPlayer import MiniMaxPlayer
+from MiniMaxPlayer import Group02Player
 from pypokerengine.api.game import setup_config, start_poker
 
 def normalize(narray):
@@ -39,7 +39,7 @@ def main():
     # STEP 1: Generate population
     population = []
     for i in range(POPULATION_SIZE):
-        population.append(MiniMaxPlayer())
+        population.append(Group02Player())
 
     # loop through generations
     for gen in range(GENERATIONS):
@@ -206,7 +206,7 @@ def crossover(parents):
     for i in range(3-index):
         new_weights.append(parent2.weights[i])
 
-    child = MiniMaxPlayer(normalize(np.array(new_weights)))
+    child = Group02Player(normalize(np.array(new_weights)))
     
     return child
 
