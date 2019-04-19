@@ -8,13 +8,15 @@ from pypokerengine.engine.hand_evaluator import HandEvaluator
 import numpy as np
 import time
 import random
+import Group02_eval_pre_flop as eval_pre_flop
+import Group02_eval_post_flop as eval_post_flop
 
 MINIMAX_DEPTH = 2
 NUM_ROUNDS = 20 # num rounds in MiniMax Game?
 
 isDebug = False
 isActionTimed = False # either enable isActionTimed or isHeuristicTimed? (not both together?)
-isHeuristicTimed = False 
+isHeuristicTimed = False
 
 
 def normalize(narray):
@@ -101,8 +103,8 @@ def HandPotential(weight, hole_card, community_card):
     behind = 2
     No_of_times = 5 # numround = 35 - 2 very good for running alone and together without timeout but 3 has few
     # Hand potential array, each index represents ahead, tied, and behind.
-    HP = [[1 for x in range(3)] for y in range(3)] # initialize to 0 
-    HPTotal = [0 for x in range(3)] # initialize to 0 
+    HP = [[1 for x in range(3)] for y in range(3)] # initialize to 0
+    HPTotal = [0 for x in range(3)] # initialize to 0
     ourrank = HandEvaluator.eval_hand(hole_card, community_card)
     # Consider all two card combinations of the remaining cards for the opponent.
     community_card = _fill_community_card(community_card, used_card=hole_card+community_card)
@@ -120,9 +122,9 @@ def HandPotential(weight, hole_card, community_card):
             oppweight = (Map_169(oppcard1, oppcard2, weight)/3364.0)
             if(ourrank>opprank): index = ahead
             elif(ourrank==opprank): index = tied
-            else: index = behind # < 
+            else: index = behind # <
             HPTotal[index] += oppweight
-            # Final 5-card board 
+            # Final 5-card board
             board = community_card
             board.append(turn)
             board.append(river)
@@ -141,16 +143,16 @@ def HandPotential(weight, hole_card, community_card):
         oppweight = Map_169(oppcard[0], oppcard[1], weight)
         if(ourrank>opprank): index = ahead
         elif(ourrank==opprank): index = tied
-        else: index = behind # < 
+        else: index = behind # <
         HPTotal[index] += oppweight
         hand = hole_card + community_card
         #community_card = _fill_community_card(community_card, used_card=hand.append(oppcard))
         #hand = hand.append(oppcard)
         new_unused_cards = _pick_unused_card(2, hand)
         other_cards = [new_unused_cards[2*i:2*i+2] for i in range(1)]
-        # All possible board cards to come. 
+        # All possible board cards to come.
         for turn_and_river in other_cards:
-            # Final 5-card board 
+            # Final 5-card board
             board = community_card + turn_and_river
             ourbest = HandEvaluator.eval_hand(hole_card,board)
             oppbest = HandEvaluator.eval_hand(oppcard,board)
@@ -158,12 +160,12 @@ def HandPotential(weight, hole_card, community_card):
             elif(ourbest==oppbest): HP[index][tied] +=oppweight
             else: HP[index][behind] +=oppweight # <
     """
-    sumBehind = HP[behind][ahead] + HP[behind][tied] + HP[behind][behind] 
+    sumBehind = HP[behind][ahead] + HP[behind][tied] + HP[behind][behind]
     sumTied = HP[tied][ahead] + HP[tied][tied] + HP[tied][behind]
     sumAhead = HP[ahead][ahead] + HP[ahead][tied] + HP[ahead][behind]
-    # Ppot: were behind but moved ahead. 
+    # Ppot: were behind but moved ahead.
     Ppot = (HP[behind][ahead]+HP[behind][tied]/2+HP[tied][ahead]/2)/ (sumBehind+sumTied/2)
-    # Npot: were ahead but fell behind. 
+    # Npot: were ahead but fell behind.
     # Npot = (HP[ahead][behind]+HP[tied][behind]/2+HP[ahead][tied]/2)/ (sumAhead+sumTied/2)
     # printStats(HPTotal, HP)
     return Ppot
@@ -181,7 +183,7 @@ def printStats(HPTotal, HP):
     ahead = 0
     tied = 1
     behind = 2
-    sumBehind = HP[behind][ahead] + HP[behind][tied] + HP[behind][behind] 
+    sumBehind = HP[behind][ahead] + HP[behind][tied] + HP[behind][behind]
     sumTied = HP[tied][ahead] + HP[tied][tied] + HP[tied][behind]
     sumAhead = HP[ahead][ahead] + HP[ahead][tied] + HP[ahead][behind]
     print("Handstrength (current board):")
@@ -190,19 +192,19 @@ def printStats(HPTotal, HP):
     print("Tied weighted sum: ", HPTotal[tied])
     hs = (HPTotal[ahead]+HPTotal[tied]/2) / (HPTotal[ahead]+HPTotal[behind]+HPTotal[tied])
     print("Handstrength one opponent: ", hs)
-            
+
     print("TRANSITIONS (currently ahead)")
     print("Total simulations sarting ahead: ", sumAhead)
     print("Ahead-Ahead: ", HP[ahead][ahead])
     print("Ahead-Tied: ", HP[ahead][tied])
     print("Ahead-Behind: ", HP[ahead][behind])
-            
+
     print("TRANSITIONS (currently behind)")
     print("Total simulations sarting behind: ", sumBehind)
     print("Behind-Ahead: ", HP[behind][ahead])
     print("Behind-Tied: ", HP[behind][tied])
     print("Behind-Behind", HP[behind][behind])
-        
+
     print("TRANSITIONS (currently tied)")
     print("Total simulations sarting tied: ", sumTied)
     print("Tied-Ahead: ", HP[tied][ahead])
@@ -247,7 +249,7 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
-        if isActionTimed:      
+        if isActionTimed:
             start = time.time()
 
         uuid = 0
@@ -259,12 +261,20 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
         player = round_state['next_player']
         game_state = get_game_state(round_state, cards, uuid)
         game = Game(cards,player,game_state, NUM_ROUNDS, valid_actions,round_state, self.weights)
-        
+
         if isDebug:
             print("Getting action...")
-        
-        action = game.minimax(game_state, MINIMAX_DEPTH)
-        
+
+        try:
+            action = game.minimax(game_state, MINIMAX_DEPTH, hole_card, round_state['community_card'])
+        except TypeError:
+            for i in valid_actions:
+                if i["action"] == "raise":
+                    action = i["action"]
+                    return action  # action returned here is sent to the poker engine
+            action = valid_actions[1]["action"]
+            return action
+
         if isDebug:
             print("================Action selected...")
 
@@ -277,7 +287,7 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
         #action = call_action_info["action"]
         # print("WHAT AM I DOING: "+action)
         # print(time.time() - x)
-        
+
         return action
 
     def receive_game_start_message(self, game_info):
@@ -332,22 +342,42 @@ class Game:
         temp = list(map(lambda x:x['action'],self.emulator.generate_possible_actions(state)))
         return temp
 
-    def eval_heuristics(self, player, state):
-        if isDebug:        
+    def eval_heuristics(self, player, state, hole_cards, community_cards):
+        if isDebug:
             print("Evaluating heuristics")
-        if isHeuristicTimed:        
+        if isHeuristicTimed:
             start = time.time()
             print(time.time())
 
-        win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
-        # print("1. Win rate done")        
+        if(community_cards == []):  # Preflop
+            # new_pre_time = time.time()
+            win_rate = eval_pre_flop.eval_pre_flop(hole_cards)
+            # new_pre_time = time.time() - new_pre_time
+            # print("NEW PRE FLOP WINRATE: " + str(win_rate))
+            # print("NEW PRE WINRATE TOOK: " + str(new_pre_time))
+        else:
+            # old_time = time.time()
+            # win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
+            # old_time = time.time() - old_time
+            # print(hole_cards)
+            # print(community_cards)
+            # print('\n')
+            # print("OLD WINRATE: " + str(win_rate))
+            # print("OLD WINRATE TOOK: " + str(old_time))
+            # new_post_time = time.time()
+            win_rate = eval_post_flop.eval_post_flop_rank(hole_cards, community_cards)
+            # new_post_time = time.time() - new_post_time
+            # print("NEW POST FLOP WINRATE: " + str(win_rate))
+            # print("NEW POST WINRATE TOOK: " + str(new_post_time))
+
+        # print("1. Win rate done")
         amount_in_pot = self.round_state['pot']['main']['amount']
-        # print("2. Amount in pot done")        
+        # print("2. Amount in pot done")
         EHS = EffectiveHandStrength(self.hole_card, state['table']._community_card)
         # print("3. Hand strength done")
         # time.sleep(0.2)
         # if isDebug:
-            # print("=======Got heuristics") 
+            # print("=======Got heuristics")
         if isHeuristicTimed:
             end = start = time.time()
             print("==========Got heuristics in time: " + str(end-start) + " secs")
@@ -365,7 +395,7 @@ class Game:
         return self.emulator.apply_action(curr_state, move)[0]
 
     """ TODO: Change to expectimax when stuff works """
-    def minimax(self, newState, max_depth):
+    def minimax(self, newState, max_depth, hole_cards, community_cards):
 
         player = self.future_move(newState)
         inf = float('inf')
@@ -373,10 +403,10 @@ class Game:
         def min_value(newState,alpha,beta,depth):
             if isDebug:
                 print("In MIN")
-        
+
             if depth== max_depth or self.terminal_test(newState):
             #if self.terminal_test(newState):
-                return self.eval_heuristics(player, newState)
+                return self.eval_heuristics(player, newState, hole_cards, community_cards)
             v = inf
             for a in self.actions(newState):
                 v = min(max_value(self.project(newState, a),alpha,beta, depth+1),v)
@@ -388,10 +418,10 @@ class Game:
         def max_value(newState,alpha,beta,depth):
             if isDebug:
                 print("In MAX")
-        
+
             if depth == max_depth or self.terminal_test(newState):
             #if self.terminal_test(newState):
-                return self.eval_heuristics(player, newState)
+                return self.eval_heuristics(player, newState, hole_cards, community_cards)
             v = -inf
             for a in self.actions(newState):
                 v = max(min_value(self.project(newState, a), alpha,beta, depth+1),v)
@@ -412,4 +442,3 @@ class Game:
         return best_action
 
         #a = np.argmax(list(map(lambda a: min_value(self.project(newState, a),0),self.actions(newState))))
-
