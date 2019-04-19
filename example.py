@@ -2,6 +2,7 @@ from pypokerengine.api.game import setup_config, start_poker
 import numpy as np
 from randomplayer import RandomPlayer
 from raise_player import RaisedPlayer
+
 from Group02PlayerConfig import Group02Player
 
 #TODO:config the config as our wish
