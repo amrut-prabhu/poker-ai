@@ -189,7 +189,8 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
         BasePokerPlayer.__init__(self)
 
         self.fitness = -1
-        init_starting_weights = np.array([105,0.03,0])
+        init_starting_weights = np.array([0.5,0.1,0.4])
+        # 0.327986, 0.293286, 0.378728
         if def_weights is None:
             self.weights = normalize(init_starting_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
         else:
@@ -208,7 +209,7 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
         """
         Mutate and change form!
         """
-        self.weights = normalize(self.weights * (1 + np.random.uniform(-0.2, 0.2, size=3)))
+        self.weights = normalize(self.weights * (1 + np.random.uniform(-0.45, 0.45, size=3)))
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
