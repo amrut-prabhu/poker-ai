@@ -2,10 +2,11 @@
 
 \typeout{IJCAI-18 Instructions for Authors}
 
+% \setcounter{secnumdepth}{5}
+
 % These are the instructions for authors for IJCAI-18.
 % They are the same as the ones for IJCAI-11 with superficical wording
 %   changes only.
-
 \documentclass{article}
 \pdfpagewidth=8.5in
 \pdfpageheight=11in
@@ -23,29 +24,18 @@
 %\usepackage{latexsym} 
 
 \usepackage{graphicx}
+\graphicspath{ {./} }
 
-% Following comment is from ijcai97-submit.tex:
-% The preparation of these files was supported by Schlumberger Palo Alto
-% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
-% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
-% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
-% preparation.
+\usepackage{hyperref}
 
-% These instructions can be modified and used in other conferences as long
-% as credit to the authors and supporting agencies is retained, this notice
-% is not changed, and further modification or reuse is not restricted.
-% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
-% contacts for providing assistance without their prior permission.
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan
+}
 
-% To use for other conferences, change references to files and the
-% conference appropriate and use other authors, contacts, publishers, and
-% organizations.
-% Also change the deadline and address for returning papers and the length and
-% page charge instructions.
-% Put where the files are available in the appropriate places.
-
-\title{An Adversarial Approach for building a Limit Texas Hold'em Poker Agent - Team \#02}
-
+\title{Limit Texas Hold'em Poker Agent built using an Adversarial Approach - Team \#02}
 
 % Multiple author syntax (remove the single-author syntax above and the \iffalse ... \fi here)
 
@@ -57,9 +47,9 @@ Shreyas Kuthanoor Prakash,
 Zhong Zheng Xin
 \\ 
 National University of Singapore\\
-%
-A0162655B,A01,A01,A01,A01
+A0162655B, A0162694W, A0147944U, A0177064B,A0160045U 
 }
+
 % If your authors do not fit in the default space, you can increase it 
 % by uncommenting the following (adjust the "2.5in" size to make it fit
 % properly)
@@ -71,228 +61,184 @@ A0162655B,A01,A01,A01,A01
 
 \section{Introduction}
 
-The introduction must contain a concise description of the problem. In particular it should describe
-\begin{enumerate}
-	\item What does your agent do (i.e. what is the problem?)
-	\item Why did you choose this implementation (i.e. why should the reader be interested?)
-	\item What is the result that you achieved? (i.e. why should the reader believe you?)
-\end{enumerate}
-It should be about a column long. 
-\subsection{Length of Papers}
+Limit Texas Hold’em is a simplified version of the poker game. When playing in a game of poker,  the money always flows between the players, and there is no additional money coming into or going out of the game. It remains a fixed amount. Also, it is impossible to know with full certainty, the cards that your opponents have as well as what the community cards on the table will be. Thus, poker is a zero-sum game with an element of uncertainty. 
 
-Papers should be four pages long, excluding references. References can take up an unlimited number of pages. Note that only references can appear on the extra page. Sections such as conclusions or acknowledgments should not be placed on the extra references page.
-You may include an appendix with extra results, to be read at the staff's discretion.
+When using a Poker bot, It is not computationally feasible to look at all possible states of the poker game before making a decision about what action \footnote{Possible actions are: raise, call and fold} to take. A smarter approach that uses intuition (i.e. heuristics) to make better decisions is required. Hence, the aim of this project is to design and implement such an agent, that can optimally play a 2-player game of Limit Texas Hold’em Poker.
 
-\subsection{Word Processing Software}
+\subsection{Our Approach} 
 
-As detailed below, IJCAI has prepared and made available a set of
-\LaTeX{} macros and a Microsoft Word template for use in formatting
-your paper. If you are using some other word processing software (such
-as WordPerfect, etc.), please follow the format instructions given
-below and ensure that your final paper looks as much like this sample
-as possible.
+This report discusses an Adversarial strategy that is designed to make optimal decisions in 2-player Limit Texas Hold’em poker (hereafter referred to as poker) games. This makes sense intuitively because, as described above, poker is a zero-sum game in which you, the player, have an adversary, your opponent, who is trying to win your money and vice versa.
 
-{\bf Note that I did not edit the word document, and it still contains the original IJCAI formatting instructions. Please ignore those!}
-
-\section{Style and Format}
-
-\LaTeX{} and Word style files that implement these instructions
-can be retrieved electronically. (See Appendix~\ref{stylefiles} for
-instructions on how to obtain these files.)
-
-\subsection{Layout}
-
-Print manuscripts two columns to a page, in the manner in which these
-instructions are printed. The exact dimensions for pages are:
 \begin{itemize}
-\item left and right margins: .75$''$
-\item column width: 3.375$''$
-\item gap between columns: .25$''$
-\item top margin---first page: 1.375$''$
-\item top margin---other pages: .75$''$
-\item bottom margin: 1.25$''$
-\item column height---first page: 6.625$''$
-\item column height---other pages: 9$''$
+    \item {\bf Heuristics}:
+        Before deciding on a strategy, we looked into generating heuristics that are simple and effective. Though we use many implicit heuristics, the 3 heuristic functions that we use - Win rate, Effective Hand Strength, and Amount in Pot - are described in Section 2.1.
+    \item {\bf MiniMax Search Tree}:
+        The Adversarial strategy used by our agent is implemented as a MiniMax search tree that also uses alpha beta pruning, as described in Section 2.2. The utility function used at the terminal nodes is a weighted combination of the 3 heuristic functions. 
+    \item {\bf Genetic Algorithm to determine weights}:
+        As mentioned above, each of the 3 heuristics is assigned a weight, which is used when determining the utility function of a terminal state. The optimal values of these weights is found using the genetic algorithm described in Section 3. Basically, the best "parents" in each generation of players are used for creating a child parent.
 \end{itemize}
 
-All measurements assume an 8-1/2$''$ $\times$ 11$''$ page size. For
-A4-size paper, use the given top and left margins, column width,
-height, and gap, and modify the bottom and right margins as necessary.
+\section{Adversarial Search}
 
-\subsection{Format of Electronic Manuscript}
+As mentioned in Section 1, Poker is a zero sum game. Hence, it can intuitively be modelled as a game with an adversarial opponent. But first, we need to define the heuristics that are able to capture the state of the game, and help our agent make an optimal decision to achieve a Nash equilibrium.
 
-For the production of the electronic manuscript, you must use Adobe's
-{\em Portable Document Format} (PDF). A PDF file can be generated, for
-instance, on Unix systems using {\tt ps2pdf} or on Windows systems
-using Adobe's Distiller. There is also a website with free software
-and conversion services: {\tt http://www.ps2pdf.com/}. For reasons of
-uniformity, use of Adobe's {\em Times Roman} font is strongly suggested. In
-\LaTeX2e{}, this is accomplished by putting
-\begin{quote} 
-\mbox{\tt $\backslash$usepackage\{times\}}
-\end{quote}
-in the preamble.\footnote{You may want also to use the package {\tt
-latexsym}, which defines all symbols known from the old \LaTeX{}
-version.}
-  
-Additionally, it is of utmost importance to specify the American {\bf
-letter} format (corresponding to 8-1/2$''$ $\times$ 11$''$) when
-formatting the paper. When working with {\tt dvips}, for instance, one
-should specify {\tt -t letter}.
+\subsection{Heuristics}
+The poker agent makes use of a linear weighted sum of the heuristics as the heuristic function for a given state. Given a state and a set of valid actions, the agent computes the heuristic function values for all the next set of actions the agent can make and then greedily picks the next state which has the maximum/minimum heuristic value depending on whether it is a small blind or big blind.
+We have 3 explicit heursitics, but many implicit ones.
+% {\tt https://pdfs.semanticscholar.org/1071/c0f275e5412825d46558e35267a8e03d2b2c.pdf}
 
-\subsection{Title and Author Information}
+\subsubsection{Win Rate}
 
-Center the title on the entire width of the page in a 14-point bold
-font. The title should be capitalized using Title Case. Below it, center author name(s) in a 12-point bold font. On the following line(s) place the affiliations, each affiliation on its own line using a 12-point regular font. Matching between authors and affiliations can be done using superindices. Additionally, a comma-separated email addresses list using a 12-point regular font is also allowed. Credit to a
-sponsoring agency can appear on the first page as a footnote.
+The win rate for the player given the current state is the {\bf most important heuristic} for optimal decision making.
 
-\subsection{Text}
+\textbf{Pre-flop:} There are a small number of possible starting hole card combinations and the win rate for every hole card combination can easily be pre-determined and hard coded. We’ve obtained data from \href{https://www.cs.indiana.edu/~kapadia/nofoldem/2_wins.stats}{here} which provides the win rate for every hole card combination [Anu Kapadia (n.d.)]. The data is generated by playing 4 billion simulated games in a 1v1 fashion. The \texttt{\detokenize{eval_pre_flop(hole_cards)}} function will simply return the win rate from the hard coded data.
 
-The main body of the text immediately follows the abstract. Use
-10-point type in a clear, readable font with 1-point leading (10 on
-11).
+\textbf{A naive hand evaluator:} This game is played in a fixed 1v1 fashion and thus we can easily get an accurate win rate by considering the probability of the opponent getting a hand better than ours. By first determining the bot’s best hand, we simply need to calculate the odds of the opponent getting a better hand. For example, the bot has a flush with an Ace high (the highest card in his hole cards that is part of the flush) which is the highest possible flush. Hence, to get the win rate of the bot’s current hand, we check if the community cards can from any stronger hands (full house, four of a kind, straight flush, royal flush) and determine the odds of that.
+This method is easily doable for the river street and will compute very quickly. However this is a problem in the flop and turn streets as there are more community cards to draw and to get the win rate for the current state, it has to simulate the win rate of every possible community card to be drawn and average it. This can be computationally intensive especially for the flop street where it needs to calculate up to 48C2=1,128 different scenarios.
 
- \begin{figure}[!t]
-	\centering
-	\includegraphics[width=0.5\textwidth]{test.jpg}
-	\caption{\textbf{Live-cell super-resolution microscopy with NanoJ-SRRF.} sG.}
-	\label{fig:TestDiagram}
-\end{figure}
+The issue can be solved using a Look-Up Table (LUT) by pre-computing all possible states, ever 7-card combination (2 hole cards and 5 community cards), 6-card combination and 5-card combination. However a new issue arises, 7-card combinations will result in 52C2*50C5=2,809,475,760 states and will be about 10GB in size. The states may be reduced with the fact that some states are identical (since suits are treated equally); LUT size can be reduced but not enough. For 6-card combinations and 5-card combinations, there are significantly much less states (305,377,800 and 25,989,600 respectively before reductions) and these will result in a LUT size that is reasonable (under 300MB in total with compression).
 
-Finally, (Fig. \ref{fig:TestDiagram} above) complete 
+Since calculating a win rate for one state is fast enough to be done real-time, win rate during the river street will be computed in real-time while win rates for flop and turn streets will be provided by the LUTs.
 
-Indent when starting a new paragraph, except after major headings.
+\subsubsection{Effective Hand Strength based on Opponent Model}
 
-\subsection{Headings and Sections}
+The Effective hand strength heuristic provides an accurate assessment of our agent’s winning chances by using an opponent model and the present game state. This evaluation has two stages- pre-flop and post-flop evaluation because the community cards get opened in stages. The pre-flop evaluation calculates the hand strength of our private cards while the post-flop evaluation takes into account both the hand strength and the potential of our private cards. Here, the hand strength assesses how strong our hand is while the hand potential is the probability of our hand becoming the strongest hand when future community cards are dealt. 
 
-When necessary, headings should be used to separate major sections of
-your paper. (These instructions use many headings to demonstrate their
-appearance; your paper should have fewer headings.). All headings should be capitalized using Title Case.
+For a set of two cards, there are 169 distinct hand types (13 paired hands). For each of these hand types, a statistical measure of the approximate return of our investment is calculated and stored as an array of weights. This array of \href{http://poker.cs.ualberta.ca/publications/papp.msc.pdf}{weights} thus serves as a distribution of the expected value our cards gain [Denis Richard Papp, 1998]. 
 
-\subsubsection{Section Headings}
+{\bf Hand Strength}: The Hand Strength calculation is done on the flop, turn and river and provides an estimate of the probability that our hand is the strongest hand. With the set of weights defined earlier, we calculate the strength of our cards relative to what other players may hold. By obtaining a percentile ranking of our hand using the weighted sum, the strength becomes the measure of the hands we are ahead divided by the total possible hands
 
-Print section headings in 12-point bold type in the style shown in
-these instructions. Leave a blank space of approximately 10 points
-above and 4 points below section headings.  Number sections with
-arabic numerals.
+{\bf Hand Potential}: The head potential is the probability that our hand improves as more community cards get opened. For example, consider the cards 3 of Hearts and 6 of Clubs. These two cards have a very weak hand strength. Suppose the community cards which open up on the flop are 4 of Hearts, 5 of Hearts and 10 of Hearts. Now our weak cards have tremendous potential for improvement. A single Hearts card or 2 or 7 can give us a flush or a straight. Thus, there is a high possibility for our hand to improve. 
 
-\subsubsection{Subsection Headings}
+We thus define positive potential as the probability of getting a better hand when we are behind. This can be evaluated by looking at the combinations of cards which result in us being ahead when we were behind. In order to obtain this value, we look-ahead to possible turn and river cards which might turn up.
 
-Print subsection headings in 11-point bold type. Leave a blank space
-of approximately 8 points above and 3 points below subsection
-headings. Number subsections with the section number and the
-subsection number (in arabic numerals) separated by a
-period.
+{\bf Effective Hand Strength}: The Effective Hand Strength (EHS) represents the strength of our hand in the current game state. It is an estimation of the probability that our hand is leading or will improve to the strongest hand after the community cards are dealt. Thus, it a combination of both Hand Strength and Hand Potential and is calculated as follows:
 
-\subsubsection{Subsubsection Headings}
+$EHS = Hand\_Strength + (1 - Hand\_Strength) * Positive\_Potential$
 
-Print subsubsection headings in 10-point bold type. Leave a blank
-space of approximately 6 points above subsubsection headings. Do not
-number subsubsections.
+Though the Effective Hand Strength heuristic is quite effective in assessing the strength of our hand, it is quite exhaustive computationally and takes a large time to provide accurate values, which resulted in Timeout exceptions during the early stages. Thus, we reduced the number of simulations needed for obtaining the weighted sum by taking random values in order to improve on the time taken. 
 
-\subsubsection{Special Sections}
+\subsubsection{Amount in Pot}
 
-You may include an unnumbered acknowledgments section, including
-acknowledgments of help from colleagues.
+The Amount in Pot heuristic provides an assessment of the amount in play and can guide the agent's action along with the other heuristics. For a weak hand, our agent might find to better to fold at an early stage in order to reduce the amount in the pot, effectively cutting down his losses. Similarly, with a very strong hand, the agent might raise more to increase the pot amount. 
 
-Any appendices directly follow the text and look like sections, except
-that they are numbered with capital letters instead of arabic
-numerals.
+\subsection{Strategy}
+Minimax is a decision-making algorithm , usually used in turn-based two player games. The goal of the algorithm is to find the next optimal move from its current position on the game tree.
 
-The references section is headed ``References,'' printed in the same
-style as a section heading but without a number. A sample list of
-references is given at the end of these instructions. Use a consistent
-format for references, such as that provided by Bib\TeX{}. The reference
-list should not include unpublished work.
+The decision is made using a MiniMax tree with alpha-beta pruning. MiniMax is an adversarial search algorithm that recursively calls two functions $Max$ and $Min$ to determine the next move that the player should take. In the case of our poker agent that means choosing between fold, call or raise depending if these are valid actions from the previous move. We do a depth-limited MiniMax by going to a certain depth in the game tree and then moving upwards while performing MiniMax.  
 
-\subsection{Citations}
+The pre-flop stage is pre-computed as the decision tree is exhaustive while the post-flop stage is when the MiniMax strategy is used. The MiniMax function has two terminal tests which determines where it should start computing the weighted heuristics. One is whether the predetermined max depth has been reached and the other is whether the agent is in the last round of the game. Else the the MiniMax traverses the tree further and updated Alpha (Max strategy) and Beta (Min strategy) until it determines the next best action to take. 
 
-Citations within the text should include the author's last name and
-the year of publication, for example~\cite{gottlob:nonmon}.  Append
-lowercase letters to the year in cases of ambiguity.  Treat multiple
-authors as in the following examples:~\cite{abelson-et-al:scheme}
-or~\cite{bgf:Lixto} (for more than two authors) and
-\cite{brachman-schmolze:kl-one} (for two authors).  If the author
-portion of a citation is obvious, omit it, e.g.,
-Nebel~\shortcite{nebel:jair-2000}.  Collapse multiple citations as
-follows:~\cite{gls:hypertrees,levesque:functional-foundations}.
-\nocite{abelson-et-al:scheme}
-\nocite{bgf:Lixto}
-\nocite{brachman-schmolze:kl-one}
-\nocite{gottlob:nonmon}
-\nocite{gls:hypertrees}
-\nocite{levesque:functional-foundations}
-\nocite{levesque:belief}
-\nocite{nebel:jair-2000}
+In the case of the MiniMax tree, how the evaluation of the heuristics is done is very important. As mentioned in the above sections, the 3 heuristics whose sum is taken to evaluate the next action are opponent behaviour, strength of agent’s hand and amount in pot. These heuristics are given appropriate weights using the genetic algorithm and this helps the agent come up with the next best decision to take.
 
-\subsection{Footnotes}
+\section{Determining Heuristic Weights}
 
-Place footnotes at the bottom of the page in a 9-point font.  Refer to
-them with superscript numbers.\footnote{This is how your footnotes
-should appear.} Separate them from the text by a short
-line.\footnote{Note the line separating these footnotes from the
-text.} Avoid footnotes as much as possible; they interrupt the flow of
-the text.
+In our approach, we used a genetic algorithm to determine the optimal weights for the linear combination of the 3 heuristics. 
 
-\section{Illustrations}
+A {\bf genetic algorithm} is a method that is used for solving optimization problems. In the case of building our Poker agent, the genetic algorithm is used to determine the best values for the weights of our heuristic functions, such that our agent plays as optimally as possible.
 
-Place all illustrations (figures, drawings, tables, and photographs)
-throughout the paper at the places where they are first discussed,
-rather than at the end of the paper. If placed at the bottom or top of
-a page, illustrations may run across both columns.
+Genetic algorithms can be thought of as search heuristics that are based on Charles Darwin’s theory of natural selection, which is the process that drives biological evolution. In the process, the fittest \footnote{Here, fitness is a measure of how well the agent is able to compete with other agents in the generation}  entities of each generation of the population are selected, and are made to reproduce an offspring for the next generation. When the parents have a better fitness score, their offspring will be better than them, and will have a higher likelihood of surviving. At the same time, the not-so-fit entities are killed off and do not contribute to the next generation. The reason for doing so is to increase the diversity of entities seen,  and to ensure that the best characteristics of one generation are passed down to the next, which in turn passes it down, and so on. This process is done iteratively until it converges to a generation that has entities that have very good fitness scores. 
 
-Illustrations must be rendered electronically or scanned and placed
-directly in your document. All illustrations should be in black and
-white, as color illustrations may cause problems. Line weights should
-be 1/2-point or thicker. Avoid screens and superimposing type on
-patterns as these effects may not reproduce well.
+More concretely, there are 4 steps in the genetic algorithm that was used for training the heuristic weights of our poker agent:
 
-Number illustrations sequentially. Use references of the following
-form: Figure 1, Table 2, etc. Place illustration numbers and captions
-under illustrations. Leave a margin of 1/4-inch around the area
-covered by the illustration and caption.  Use 9-point type for
-captions, labels, and other text in illustrations.
+\begin{enumerate}
+\item{{\bf Generate an initial population}
 
-\section*{Acknowledgments}
+    The first step is to spawn instances of our player (agent) to get a starting population of players. Each player instance varies slightly, as they have a different set of assigned heuristic weights. These weights are obtained by using a random real-valued number (within a certain range), and adding or subtracting it from the default heuristic weights that is defined.
+    
+    Here, there are a few variables that need to be set. These are the hyperparameters of our genetic algorithm. In this step, we have seen 3, namely, population size (number of agents), default heuristic weights, and maximum possible offset from these default weights. These hyperparameters are discussed in more detail in the next subsection, and in the Discussion section.
+}
+\item{{\bf Calculate fitnesses}
 
-The preparation of these instructions and the \LaTeX{} and Bib\TeX{}
-files that implement them was supported by Schlumberger Palo Alto
-Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
-Preparation of the Microsoft Word file was supported by IJCAI.  An
-early version of this document was created by Shirley Jowell and Peter
-F. Patel-Schneider.  It was subsequently modified by Jennifer
-Ballentine and Thomas Dean, Bernhard Nebel, and Daniel Pagenstecher.
-These instructions are the same as the ones for IJCAI--05, prepared by
-Kurt Steinkraus, Massachusetts Institute of Technology, Computer
-Science and Artificial Intelligence Lab.
+    After having a population to work with, the fitness of each player in the population relative to the other players is computed. In order to do so, the players are made to play a game of poker against each other. The amount in the player’s stack is used as the fitness measure for that generation (or epoch or iteration). In simple terms, the player who wins the game is regarded to be fitter than the player that lost.
+    
+    In our implementation, in an epoch, the fitness measure of a player plays is determined from its results in 1v1 games of poker against two randomly selected players. This fitness measure is then used to update the player’s weights.
+}
+\item{{\bf Select parents for next generation}
+
+    The fitness measures of all the players in the population is used to generate a probability distribution. This distribution determines the likelihood of a player being selected as a parent for the players of the next generation.
+
+    The parents for our next generation of players is selected randomly from the probability distribution of the current generation. The number of parents selected is half that of the population size.
+}
+\item{{\bf Reproduce players for next generation}
+
+    The final step of the process is determining the players that will be present in the next generation of the population. The players for the next generation can be reproduced by:
+
+    \begin{itemize}
+        \item{
+            {\bf Mutations}: This involves ... This is done to maintain diversity within the population and prevent premature convergence.
+        }
+        \item{
+            {\bf Elitism}: This creates a child that is identical to the parent. So, the parent player will be reproduced as-is in the next generation.
+        }
+        \item{
+            {\bf Crossover}: For each pair of parents to be mated, a crossover point is chosen at random from within the genes. The weights (or {\textit genes}) of the first parent from before the crossover point become part of the child's weights. The remaining weights are selected from the second parent. This is shown in the Fig. \ref{fig:crossover}. 
+    
+             \begin{figure}[!t]
+            	\centering
+            	\includegraphics[width=0.45\textwidth]{crossover.png}
+            	\caption{Examples of children resulting from crossover between parents.}
+            	\label{fig:crossover}
+            \end{figure}
+        }
+    \end{itemize}
+
+	The composition of the next generation, i.e. the percentage of each type of reproduction, is another hyperparameter for this algorithm.
+}
+\end{enumerate}
+
+\subsection{Hyperparameters}
+
+There are 5 hyperparameters that affect the performance of the gentic algorithm, in terms of speed as well as optimality. The most suitable values for these are determined through trial and error, after running the genetic algorithm multiple times with different values and seeing the trends. The hyperparameters are:
+
+\begin{itemize}
+    \item The population size, i.e. number of agents: the time taken is directly proportional to this.
+    \item Default weights: this affects how quickly the algorithm can converge to give players with good fitness measures.
+    \item Random offset: similar to above, how much the player can be mutated affects the diversity of the population and convergence.	
+    \item Number of game rounds: time taken is directly proportional to this.
+    \item Composition of new generation: this affects the diversity of players seen 
+\end{itemize}
+
+
+\section{Results}
+We came up with a poker agent that can play poker against other agents with different strategies and win or come really close to winning the bigger pot of money. Our agent has a high chance of winning short 100-round games. If there is one thing we would like to explore further if we had the time would be non-linear sum of the heuristics as we think that perhaps a linear sum was perhaps a contributing factor to our agent's bad performance against some strategies.
+
+Additionally, out of 20 sets of 500-round games with {\tt RaisedPlayer}, it won in 16 of them, and 11 of the won games were completely won before the 500 rounds ended. 
+
+\section{Discussion}
+During the implementation of the agent, we realised that the runtime was much greater than the recommended 200ms. Upon delving deeper, we found that the game tree has about 40-80 terminal nodes to evaluate heuristics for. And the Monte Carlo simulations method provided by the pypoker engine only to see that running 100 simulations for each node lead to an total overhead of about 400-800ms. There is a trade-off between the number of nodes that we evaluate heuristics for and the number of simulations of Monte Carlo we ran to calculate strength of the Agent's hand. Either way there is a overall decrease in accuracy that we have to take into consideration.
+
+Secondly, the Genetic Algorithm's fitness function method can also be ameliorated. We noticed that the max fitness always lies in the range 0.45 to 0.55 , however it should ideally increase. We suspect it could be because
+\begin{itemize}
+    \item The heuristics are not normalised and so the weights determined arent scaled to the usual range boundaries of the heuristic values. 
+    \item The number of rounds played for fitness (~30), population size (maximum 50) and number of generations (maximum 40) might not be high enough to come up with the most optimal fitness value. 
+    \item The fitness function computes a value based on how much money the agent has compared to its opponent (done twice). This may not be the most optimal comparison across all players as compared to a single-player-based heuristic or a round-robin contest.
+\end{itemize}
+
+\subsection{Calculating the win rate}
+
+{\bf Alternatives rejected}
+
+\begin{itemize}
+    \item TwoPlusTwo Evaluator
+    Given our bot’s hole cards and available community cards, return the winrate of the current hand.
+    The TwoPlusTwo Evaluator only returns the win rate given the 5/6/7 cards and does not consider the number of players in the match.
+    
+    \item Monte Carlo simulations
+    Using built in function {\tt estimate\_hole\_card\_win\_rate}
+    The Monte Carlo simulations provided by the PokerEngine turned out to be too time consuming to do real-time, resulting in numerous TimeOut Exceptions.
+\end{itemize} 
 
 \appendix
-
-\section{\LaTeX{} and Word Style Files}\label{stylefiles}
-
-The \LaTeX{} and Word style files are available on the IJCAI--18
-website, {\tt http://www.ijcai-18.org/}.
-These style files implement the formatting instructions in this
-document.
-
-The \LaTeX{} files are {\tt ijcai18.sty} and {\tt ijcai18.tex}, and
-the Bib\TeX{} files are {\tt named.bst} and {\tt ijcai18.bib}. The
-\LaTeX{} style file is for version 2e of \LaTeX{}, and the Bib\TeX{}
-style file is for version 0.99c of Bib\TeX{} ({\em not} version
-0.98i). The {\tt ijcai18.sty} file is the same as the {\tt
-ijcai07.sty} file used for IJCAI--07.
-
-The Microsoft Word style file consists of a single file, {\tt
-ijcai18.doc}. This template is the same as the one used for
-IJCAI--07.
-
-These Microsoft Word and \LaTeX{} files contain the source of the
-present document and may serve as a formatting sample.  
-
-
 %% The file named.bst is a bibliography style file for BibTeX 0.99c
 \bibliographystyle{named}
 \bibliography{ijcai18}
+
+[Denis Richard Papp, 1998] Dealing with imperfect information in poker. Retrieved from http://poker.cs.ualberta.ca/publications/papp.msc.pdf
+
+[Anu Kapadia (n.d.)] Retrieved from https://www.cs.indiana.edu/~kapadia/nofoldem/2\_wins.stats
+
+% https://pdfs.semanticscholar.org/1071/c0f275e5412825d46558e35267a8e03d2b2c.pdf
 
 \end{document}
 
