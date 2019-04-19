@@ -10,8 +10,8 @@ config = setup_config(max_round=500, initial_stack=10000, small_blind_amount=20)
 
 config.register_player(name="FT1", algorithm=RaisedPlayer())
 # config.register_player(name="AI_2", algorithm=Group02Player(np.array([0.44581346, 0.30448666, 0.24969988])))
-w1 = 0.499971
-w2 = 0.1
+w1 = 0.8
+w2 = 0.05
 w3 = 1 - w1 - w2
 config.register_player(name="AI_2", algorithm=Group02Player(np.array([w1, w2, w3])))
 

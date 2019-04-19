@@ -207,7 +207,7 @@ class Group02Player(BasePokerPlayer):
         BasePokerPlayer.__init__(self)
 
         self.fitness = -1
-        init_starting_weights = np.array([0.5,0.1,0.4])
+        init_starting_weights = np.array([0.8,0.05,0.15])
         # 0.327986, 0.293286, 0.378728
         if def_weights is None:
             self.weights = normalize(init_starting_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
@@ -233,6 +233,22 @@ class Group02Player(BasePokerPlayer):
     def declare_action(self, valid_actions, hole_card, round_state):
         if isActionTimed:
             start = time.time()
+
+        if(round_state["street"] == "preflop"):
+            win_rate = eval_pre_flop.eval_pre_flop(hole_card)
+            if(win_rate < 36.0):
+                # print("FOLD")
+                return("fold")
+            elif(win_rate < 60):
+                # print("CALL")
+                return("call")
+            else:
+                # print("RAISE")
+                for i in valid_actions:
+                    if i["action"] == "raise":
+                        action = i["action"]
+                        return action
+                return("call")  # If unable to raise
 
         uuid = 0
         for p in round_state['seats']:
@@ -262,7 +278,7 @@ class Group02Player(BasePokerPlayer):
 
         if isActionTimed:
             end = time.time()
-            print("..............Action selected in TIME: " + str(end - start) + " secs")
+            print("..............Action selected in TIME: " + str((end - start)*1000) + " ms")
 
         return action
 
@@ -323,8 +339,8 @@ class Game:
             start = time.time()
             print(time.time())
 
-        amount_in_pot = self.round_state['pot']['main']['amount']
-        EHS = EffectiveHandStrength(self.hole_card, state['table']._community_card)
+        amount_in_pot = float(self.round_state['pot']['main']['amount'])/8.8
+        EHS = (EffectiveHandStrength(self.hole_card, state['table']._community_card)+10)/20*100
 
         if isDebug:
             print("=======Got heuristics")
@@ -333,7 +349,7 @@ class Game:
             print("==========Got heuristics in time: " + str(end-start) + " secs")
 
         heuristics = [win_rate, amount_in_pot, EHS]
-        res =np.dot(self.weights, heuristics)
+        res = np.dot(self.weights, heuristics)
         return res
 
     def future_move(self, state):
@@ -350,9 +366,9 @@ class Game:
         inf = float('inf')
 
         if(community_cards == []):  # Preflop
-            win_rate = eval_pre_flop.eval_pre_flop(hole_cards)
+            win_rate = eval_pre_flop.eval_pre_flop(hole_cards)/100*50+50
         else:
-            win_rate = eval_post_flop.eval_post_flop_rank(hole_cards, community_cards)
+            win_rate = eval_post_flop.eval_post_flop_rank(hole_cards, community_cards)/100*50+50
 
         def min_value(newState,alpha,beta,depth):
             """ determines what the strategy of the Min palyer should be. It is limited by max depth"""
@@ -401,6 +417,10 @@ class Game:
 
         # TODO: Since our player folds a lot. Please update/remove as required
         if best_action == 'fold':
-            best_action = 'call'
+            # print('fold')
+            return 'call'
+        else:
+            # print(best_action)
+            return best_action
 
         return best_action
