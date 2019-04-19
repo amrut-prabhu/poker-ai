@@ -207,7 +207,7 @@ class Group02Player(BasePokerPlayer):
         BasePokerPlayer.__init__(self)
 
         self.fitness = -1
-        init_starting_weights = np.array([0.5,0.1,0.4])
+        init_starting_weights = np.array([0.8,0.05,0.15])
         # 0.327986, 0.293286, 0.378728
         if def_weights is None:
             self.weights = normalize(init_starting_weights * (1 + np.random.uniform(-0.25, 0.25, size=3)))
