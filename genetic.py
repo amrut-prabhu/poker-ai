@@ -9,15 +9,6 @@ import Group02PlayerConfig as Group02PlayerConfig
 from Group02PlayerConfig import Group02Player
 from pypokerengine.api.game import setup_config, start_poker
 
-def normalize(narray):
-    """
-    normalise to percentages
-    """
-    return narray/sum(narray)
-
-def normalize_list(list):
-    return [float(i)/sum(list) for i in list]
-
 ################## CONSTANTS ##################
 # Game characteristics for determining relative fitnesses of players
 MAX_GAME_ROUNDS = 30
@@ -25,7 +16,7 @@ INITIAL_STACK = 10000
 SMALL_BLIND_AMOUNT = 20
 
 # Genetic Algorithm hyperparameters
-## NOTE!!!!!: 
+## NOTE!!!: 
 ## POPULATION_SIZE should be multiple of 10
 ## @deprecated PLAYERS_PER_TABLE should be a factor of POPULATION_SIZE
 
@@ -36,6 +27,15 @@ PLAYERS_PER_TABLE = 2 #4
 TABLES = POPULATION_SIZE - PLAYERS_PER_TABLE + 1 #int(POPULATION_SIZE / PLAYERS_PER_TABLE)
 ###############################################
 
+def normalize(narray):
+    """
+    normalise to percentages
+    """
+    return narray/sum(narray)
+
+def normalize_list(list):
+    return [float(i)/sum(list) for i in list]
+    
 def main():
     print("----------------Characteristics of Run-------------------------")
     print("Game:")
