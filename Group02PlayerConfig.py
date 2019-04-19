@@ -211,7 +211,7 @@ def printStats(HPTotal, HP):
     print("Tied-Tied: ", HP[tied][tied])
     print("Tied-Behind: ", HP[tied][behind])
 
-class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
+class Group02Player(BasePokerPlayer):
 
     def __init__(self, def_weights = None):
         """
@@ -282,23 +282,17 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
             end = time.time()
             print("..............Action selected in TIME: " + str(end - start) + " secs")
 
-        #print("FINAL ACTION: "+str(valid_actions[index]))
-        #call_action_info = valid_actions[index]
-        #action = call_action_info["action"]
-        # print("WHAT AM I DOING: "+action)
-        # print(time.time() - x)
-
         return action
 
     def receive_game_start_message(self, game_info):
         pass
-        #print("THIS IS THE GAME INFO: "+ str(game_info))
+
 
     def receive_round_start_message(self, round_count, hole_card, seats):
         pass
 
     def receive_street_start_message(self, street, round_state):
-        #print(str(street)+" "+str(round_state))
+
         pass
 
     def receive_game_update_message(self, action, round_state):
@@ -306,7 +300,7 @@ class Group02Player(BasePokerPlayer):  # Do not forget to make parent class as "
 
     def receive_round_result_message(self, winners, hand_info, round_state):
         pass
-        #print(str(winners)+" "+str(hand_info))
+
 
 
 def get_game_state(round_state, hole_card, uuid):
@@ -350,41 +344,21 @@ class Game:
             print(time.time())
 
         if(community_cards == []):  # Preflop
-            # new_pre_time = time.time()
             win_rate = eval_pre_flop.eval_pre_flop(hole_cards)
-            # new_pre_time = time.time() - new_pre_time
-            # print("NEW PRE FLOP WINRATE: " + str(win_rate))
-            # print("NEW PRE WINRATE TOOK: " + str(new_pre_time))
         else:
-            # old_time = time.time()
-            # win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
-            # old_time = time.time() - old_time
-            # print(hole_cards)
-            # print(community_cards)
-            # print('\n')
-            # print("OLD WINRATE: " + str(win_rate))
-            # print("OLD WINRATE TOOK: " + str(old_time))
-            # new_post_time = time.time()
             win_rate = eval_post_flop.eval_post_flop_rank(hole_cards, community_cards)
-            # new_post_time = time.time() - new_post_time
-            # print("NEW POST FLOP WINRATE: " + str(win_rate))
-            # print("NEW POST WINRATE TOOK: " + str(new_post_time))
 
-        # print("1. Win rate done")
         amount_in_pot = self.round_state['pot']['main']['amount']
-        # print("2. Amount in pot done")
         EHS = EffectiveHandStrength(self.hole_card, state['table']._community_card)
-        # print("3. Hand strength done")
-        # time.sleep(0.2)
-        # if isDebug:
-            # print("=======Got heuristics")
+
+        if isDebug:
+            print("=======Got heuristics")
         if isHeuristicTimed:
             end = start = time.time()
             print("==========Got heuristics in time: " + str(end-start) + " secs")
 
         heuristics = [win_rate, amount_in_pot, EHS]
         res =np.dot(self.weights, heuristics)
-        #print("DEBUG DEBUG DEBUG: "+str(res))
         return res
 
     def future_move(self, state):
@@ -394,19 +368,20 @@ class Game:
     def project (self, curr_state, move):
         return self.emulator.apply_action(curr_state, move)[0]
 
-    """ TODO: Change to expectimax when stuff works """
+    """ MiniMax decision strategy """
     def minimax(self, newState, max_depth, hole_cards, community_cards):
 
         player = self.future_move(newState)
         inf = float('inf')
 
+        """ determines what the strategy of the Min palyer should be. It is limited by max depth"""
         def min_value(newState,alpha,beta,depth):
             if isDebug:
                 print("In MIN")
 
             if depth== max_depth or self.terminal_test(newState):
-            #if self.terminal_test(newState):
                 return self.eval_heuristics(player, newState, hole_cards, community_cards)
+
             v = inf
             for a in self.actions(newState):
                 v = min(max_value(self.project(newState, a),alpha,beta, depth+1),v)
@@ -415,13 +390,14 @@ class Game:
                 beta = min(beta,v)
             return v
 
+        """ determines what the strategy of the Max palyer should be. It is limited by max depth"""
         def max_value(newState,alpha,beta,depth):
             if isDebug:
                 print("In MAX")
 
             if depth == max_depth or self.terminal_test(newState):
-            #if self.terminal_test(newState):
                 return self.eval_heuristics(player, newState, hole_cards, community_cards)
+
             v = -inf
             for a in self.actions(newState):
                 v = max(min_value(self.project(newState, a), alpha,beta, depth+1),v)
@@ -430,6 +406,9 @@ class Game:
                 alpha = max(alpha,v)
             return v
 
+        # alpha-beta pruning code
+        # considers the next best action to take by starting off the Minimax recursion
+        # and pruning out the nodes that no longer need to be considered
         best_score = -inf
         beta = inf
         best_action = None
@@ -438,7 +417,4 @@ class Game:
             if v > best_score:
                 best_score = v
                 best_action = a
-                #print("RES"+str(best_action))
         return best_action
-
-        #a = np.argmax(list(map(lambda a: min_value(self.project(newState, a),0),self.actions(newState))))
