@@ -231,56 +231,59 @@ class Group02Player(BasePokerPlayer):
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
     def declare_action(self, valid_actions, hole_card, round_state):
-        if isActionTimed:
-            start = time.time()
+        try:
+            if isActionTimed:
+                start = time.time()
 
-        if(round_state["street"] == "preflop"):
-            win_rate = eval_pre_flop.eval_pre_flop(hole_card)
-            if(win_rate < 36.0):
-                # print("FOLD")
-                return("fold")
-            elif(win_rate < 60):
-                # print("CALL")
-                return("call")
-            else:
-                # print("RAISE")
+            if(round_state["street"] == "preflop"):
+                win_rate = eval_pre_flop.eval_pre_flop(hole_card)
+                if(win_rate < 36.0):
+                    # print("FOLD")
+                    return("fold")
+                elif(win_rate < 60):
+                    # print("CALL")
+                    return("call")
+                else:
+                    # print("RAISE")
+                    for i in valid_actions:
+                        if i["action"] == "raise":
+                            action = i["action"]
+                            return action
+                    return("call")  # If unable to raise
+
+            uuid = 0
+            for p in round_state['seats']:
+                if (p['name'] == 'Group02Player'):
+                    uuid = p['uuid']
+
+            cards = list(map(lambda x: Card.from_str(x), hole_card))
+            player = round_state['next_player']
+            game_state = get_game_state(round_state, cards, uuid)
+            game = Game(cards,player,game_state, NUM_ROUNDS, valid_actions,round_state, self.weights)
+
+            if isDebug:
+                print("Getting action...")
+
+            try:
+                action = game.minimax(game_state, MINIMAX_DEPTH, hole_card, round_state['community_card'])
+            except TypeError:
                 for i in valid_actions:
                     if i["action"] == "raise":
                         action = i["action"]
-                        return action
-                return("call")  # If unable to raise
+                        return action  # action returned here is sent to the poker engine
+                action = valid_actions[1]["action"]
+                return action
 
-        uuid = 0
-        for p in round_state['seats']:
-            if (p['name'] == 'Group02Player'):
-                uuid = p['uuid']
+            if isDebug:
+                print("================Action selected...")
 
-        cards = list(map(lambda x: Card.from_str(x), hole_card))
-        player = round_state['next_player']
-        game_state = get_game_state(round_state, cards, uuid)
-        game = Game(cards,player,game_state, NUM_ROUNDS, valid_actions,round_state, self.weights)
+            if isActionTimed:
+                end = time.time()
+                print("..............Action selected in TIME: " + str((end - start)*1000) + " ms")
 
-        if isDebug:
-            print("Getting action...")
-
-        try:
-            action = game.minimax(game_state, MINIMAX_DEPTH, hole_card, round_state['community_card'])
-        except TypeError:
-            for i in valid_actions:
-                if i["action"] == "raise":
-                    action = i["action"]
-                    return action  # action returned here is sent to the poker engine
-            action = valid_actions[1]["action"]
             return action
-
-        if isDebug:
-            print("================Action selected...")
-
-        if isActionTimed:
-            end = time.time()
-            print("..............Action selected in TIME: " + str((end - start)*1000) + " ms")
-
-        return action
+        except:
+            return 'call'
 
     def receive_game_start_message(self, game_info):
         pass
