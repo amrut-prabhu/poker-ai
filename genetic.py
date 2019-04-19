@@ -59,8 +59,6 @@ def main():
 
     # loop through generations
     for gen in range(GENERATIONS):
-        # displayGeneration(gen, population)
-
         # STEP 2: Calculate fitness of each Group02Player and average population fitness
         probabilityList = calculatePopulationFitness(population, POPULATION_SIZE, gen)
 
@@ -79,8 +77,6 @@ def main():
         # STEP 4: Reproduce with 80% crossover, 10% mutation, and 10% elitism
         # new population becomes the result of reproduction
 
-        # print("Init size: " + str(len(population)))
-
         # start with no children
         population = []
 
@@ -96,8 +92,6 @@ def main():
         # crossover 75%
         for i in range(int(.7 * POPULATION_SIZE)):
             population.append(crossover(parents))
-
-        # print("Final size: " + str(len(population)))
 
     print("Final generation")
     displayGeneration(gen+1, population)    
@@ -123,19 +117,11 @@ def calculatePopulationFitness(population, populationSize, gen):
     # Create a random order of players
     order = np.random.permutation(populationSize)
     for table in range(TABLES):
-        # print("Beginning population round {0}".format(round))
-
-        # print(len(population))
-        # print(len(order))
-        # print(table*PLAYERS_PER_TABLE)
-        # print(table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE)
 
         # Calculate fitnesses for the players in this table round
-        # players = [(population[i], i) for i in order[table*PLAYERS_PER_TABLE : table*PLAYERS_PER_TABLE+PLAYERS_PER_TABLE]]
         players = [(population[i], i) for i in order[table : table+PLAYERS_PER_TABLE]]
         players, probabilities = play_round(players)
 
-        # print(probabilities)
         for num in players:
             old_fitness = population[num].get_fitness()
             
@@ -145,14 +131,11 @@ def calculatePopulationFitness(population, populationSize, gen):
                 new_fitness = (old_fitness + probabilities[players.index(num)])/2
 
             population[num].set_fitness(new_fitness)
-            # print(population[idx].__str__()) 
 
         # Add the table's probabilities to the total list
         if table == 0:
             odds_list.extend(probabilities)
         else:
-            # print(len(odds_list))
-            # print(len(probabilities))
             odds_list.pop()
             odds_list.extend(probabilities)
 
@@ -186,7 +169,6 @@ def play_round(players):
     # print("Setting up a new game")
 
     for player, num in players:
-        # print("Registering player {0}".format(num))
         config.register_player(name=num, algorithm=player)
 
     results = start_poker(config, verbose=0)
@@ -223,8 +205,6 @@ def elitism(parents):
 def crossover(parents):
     # pick two random parents
     j = random.randrange(0, len(parents)//2 + 1)
-    # print(len(parents)//2)
-    # print(j)
     parent1 = parents[j] # First parent is randomly chosen from the first half (fittest parents)
     parent2 = parents[random.randrange(0, len(parents))]
 
