@@ -1,8 +1,8 @@
 # https://github.com/worldveil/deuces
 # e.g. hole_cards = ['SA', 'C2'], community_cards = ['D9', 'H3', 'C5', 'S6', 'D4']
-from Group02_deuces import Card
-from Group02_deuces import Evaluator
-evaluator = Evaluator()
+from Group02_card import Card
+import Group02_evaluator
+evaluator = Group02_evaluator.Evaluator()
 
 all_cards = []
 all_cards.append(Card.new('Ad'))
