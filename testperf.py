@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 """ =========== *Remember to import your agent!!! =========== """
 from randomplayer import RandomPlayer
-from MiniMaxPlayer import MiniMaxPlayer
+from Group02PlayerConfig import Group02Player
 from raise_player import RaisedPlayer
 import numpy as np
 
@@ -25,8 +25,8 @@ $ python testperf.py -n1 "Random Warrior 1" -a1 RandomPlayer -n2 "Random Warrior
 
 def testperf(agent_name1, agent1, agent_name2, agent2):
     # Init to play 500 games of 1000 rounds
-    num_game = 3
-    max_round = 100
+    num_game = 1
+    max_round = 500
     initial_stack = 10000
     smallblind_amount = 20
 
@@ -39,7 +39,7 @@ def testperf(agent_name1, agent1, agent_name2, agent2):
 
     # Register players
     config.register_player(name=agent_name1, algorithm=RaisedPlayer())
-    config.register_player(name='MiniMaxPlayer', algorithm=MiniMaxPlayer(np.array([105,0.03,0])))
+    config.register_player(name='Group02Player', algorithm=Group02Player(np.array([105,0.03,0])))
     # config.register_player(name=agent_name1, algorithm=agent1())
     # config.register_player(name=agent_name2, algorithm=agent2())
 
@@ -72,7 +72,7 @@ def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('-n1', '--agent_name1', help="Name of agent 1", default="Your agent", type=str)
     parser.add_argument('-a1', '--agent1', help="Agent 1", default=RandomPlayer())
-    parser.add_argument('-n2', '--agent_name2', help="Name of agent 2", default="MiniMaxPlayer", type=str)
+    parser.add_argument('-n2', '--agent_name2', help="Name of agent 2", default="Group02Player", type=str)
     parser.add_argument('-a2', '--agent2', help="Agent 2", default=RandomPlayer())
     args = parser.parse_args()
     return args.agent_name1, args.agent1, args.agent_name2, args.agent2

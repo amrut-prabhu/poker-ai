@@ -5,3 +5,5 @@
 .vscode
 test.py
 population.txt
+*.log
+*.gz
