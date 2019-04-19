@@ -20,7 +20,7 @@ def normalize_list(list):
 
 ################## CONSTANTS ##################
 # Game characteristics for determining relative fitnesses of players
-MAX_GAME_ROUNDS = 3#10
+MAX_GAME_ROUNDS = 30
 INITIAL_STACK = 10000
 SMALL_BLIND_AMOUNT = 20
 
@@ -29,8 +29,8 @@ SMALL_BLIND_AMOUNT = 20
 ## POPULATION_SIZE should be multiple of 10
 ## @deprecated PLAYERS_PER_TABLE should be a factor of POPULATION_SIZE
 
-POPULATION_SIZE = 10#200 # Number of chromosomes
-GENERATIONS = 10#300 # Number of times that selections occur
+POPULATION_SIZE = 20#200 # Number of chromosomes
+GENERATIONS = 50#300 # Number of times that selections occur
 
 PLAYERS_PER_TABLE = 2 #4 
 TABLES = POPULATION_SIZE - PLAYERS_PER_TABLE + 1 #int(POPULATION_SIZE / PLAYERS_PER_TABLE)
