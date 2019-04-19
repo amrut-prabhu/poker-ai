@@ -10,7 +10,7 @@ import time
 import random
 
 MINIMAX_DEPTH = 2
-NUM_ROUNDS = 25 # num rounds in MiniMax Game?
+NUM_ROUNDS = 15 # num rounds in MiniMax Game? TODO: This combination with heuristics works best tp reduce Timeout errors nearly completely
 
 isDebug = False
 isActionTimed = False # either enable isActionTimed or isHeuristicTimed? (not both together?)
@@ -23,7 +23,7 @@ def normalize(narray):
     """
     return narray/sum(narray)
 
-# Preflop income rates for 1 active opponent. Obtained via simulation (view Loki paper for info)
+# Preflop income rates for 1 active opponent. Obtained via simulation (view Loki paper for info- http://poker.cs.ualberta.ca/publications/papp.msc.pdf)
 IR2_2 = [7, -351, -334, -314, -318, -308, -264, -217, -166, -113, -53, 10, 98]
 IR2_3 = [-279, 74, -296, -274, -277, -267, -251, -201, -148, -93, -35, 27, 116]
 IR2_4 = [-263, -225, 142, -236, -240, -231, -209, -185, -130, -75, -17, 46, 134]
@@ -43,6 +43,7 @@ cardRankToStartIndex = {2:0,3:1,4:2,5:3,6:4,7:5,8:6,9:7,10:8,11:9,12:10,13:11,14
 
 cardSuitToStartIndex = {2:0,4:1,8:2,16:3}
 
+# Select appropriate weight values
 def Map_169(c1, c2, toMap):
     rank1 = c1.rank
     rank2 = c2.rank
@@ -55,13 +56,15 @@ def Map_169(c1, c2, toMap):
     else:
         return toMap[idx2][idx1] if r1Greatest else toMap[idx1][idx2]
 
+# Evaluate hand strength = probability that our hand is the strongest hand based on given pre-determined weights
 def HandStrength(weight, hole_card, community_card):
-    No_of_times = 5 # numround = 35 - 3 for running alone without timeout, 2 for running together
+    No_of_times = 5 # numround = 35 -> run 3 times for running alone without timeout, 2 for running together
     Ahead = Tied = Behind = 1
     ourrank = HandEvaluator.eval_hand(hole_card, community_card)
     # Consider all two card combinations of the remaining cards.
     unused_cards = _pick_unused_card(45, hole_card + community_card)
 
+    # Run defined number of simulations
     while(No_of_times>0):
         oppcard1 = random.choice(unused_cards)
         oppcard2 = random.choice(unused_cards)
@@ -76,37 +79,25 @@ def HandStrength(weight, hole_card, community_card):
             elif (ourrank==opprank): Tied += oppweight
             else: Behind += oppweight # <
             No_of_times = No_of_times - 1
-    """
-    for oppcard1 in unused_cards:
-        for oppcard2 in unused_cards:
-            if(oppcard1 != oppcard2):
-                # initial opponent hand value
-                oppcard = [oppcard1, oppcard2]
-                opprank = HandEvaluator.eval_hand(oppcard, community_card)
-                # enemy card weight
-                oppweight = (Map_169(oppcard1, oppcard2, weight)/3364.0)
-                # print(ourrank, opprank, oppweight)
-                if(ourrank>opprank): Ahead += oppweight
-                elif (ourrank==opprank): Tied += oppweight
-                else: Behind += oppweight # <
-                No_of_times = No_of_times - 1
-    oppcards = [unused_cards[2*i:2*i+2] for i in range(1)]
-    """
+
     handstrength = (Ahead+Tied/2)/(Ahead+Tied+Behind)
     return handstrength
 
+# Evaluate hand potential = potential that our hand can become better
 def HandPotential(weight, hole_card, community_card):
     ahead = 0
     tied = 1
     behind = 2
-    No_of_times = 5 # numround = 35 - 2 very good for running alone and together without timeout but 3 has few
+    No_of_times = 5 # numround = 35 -> run 2 times -> good for running alone and together without timeout but 3 has few errors
     # Hand potential array, each index represents ahead, tied, and behind.
-    HP = [[1 for x in range(3)] for y in range(3)] # initialize to 0 
+    HP = [[0.01 for x in range(3)] for y in range(3)] # initialize to low value 0.01
     HPTotal = [0 for x in range(3)] # initialize to 0 
     ourrank = HandEvaluator.eval_hand(hole_card, community_card)
     # Consider all two card combinations of the remaining cards for the opponent.
     community_card = _fill_community_card(community_card, used_card=hole_card+community_card)
     unused_cards = _pick_unused_card(45, hole_card + community_card)
+
+    # Run defined number of simulations
     while(No_of_times>0):
         oppcard1 = random.choice(unused_cards)
         oppcard2 = random.choice(unused_cards)
@@ -132,32 +123,7 @@ def HandPotential(weight, hole_card, community_card):
             elif(ourbest==oppbest): HP[index][tied] +=oppweight
             else: HP[index][behind] +=oppweight # <
             No_of_times = No_of_times - 1
-    """
-    oppcards = [unused_cards[2*i:2*i+2] for i in range(1)]
-    for oppcard in oppcards:
-        # initial opponent hand value
-        opprank = HandEvaluator.eval_hand(oppcard, community_card)
-        # enemy card weight
-        oppweight = Map_169(oppcard[0], oppcard[1], weight)
-        if(ourrank>opprank): index = ahead
-        elif(ourrank==opprank): index = tied
-        else: index = behind # < 
-        HPTotal[index] += oppweight
-        hand = hole_card + community_card
-        #community_card = _fill_community_card(community_card, used_card=hand.append(oppcard))
-        #hand = hand.append(oppcard)
-        new_unused_cards = _pick_unused_card(2, hand)
-        other_cards = [new_unused_cards[2*i:2*i+2] for i in range(1)]
-        # All possible board cards to come. 
-        for turn_and_river in other_cards:
-            # Final 5-card board 
-            board = community_card + turn_and_river
-            ourbest = HandEvaluator.eval_hand(hole_card,board)
-            oppbest = HandEvaluator.eval_hand(oppcard,board)
-            if(ourbest>oppbest): HP[index][ahead] +=oppweight
-            elif(ourbest==oppbest): HP[index][tied] +=oppweight
-            else: HP[index][behind] +=oppweight # <
-    """
+
     sumBehind = HP[behind][ahead] + HP[behind][tied] + HP[behind][behind] 
     sumTied = HP[tied][ahead] + HP[tied][tied] + HP[tied][behind]
     sumAhead = HP[ahead][ahead] + HP[ahead][tied] + HP[ahead][behind]
@@ -165,9 +131,9 @@ def HandPotential(weight, hole_card, community_card):
     Ppot = (HP[behind][ahead]+HP[behind][tied]/2+HP[tied][ahead]/2)/ (sumBehind+sumTied/2)
     # Npot: were ahead but fell behind. 
     # Npot = (HP[ahead][behind]+HP[tied][behind]/2+HP[ahead][tied]/2)/ (sumAhead+sumTied/2)
-    # printStats(HPTotal, HP)
     return Ppot
 
+# Evaluate Effective Hand Strength (EHS) value
 def EffectiveHandStrength(oppcards, boardcards):
     weight = IR2
     HS = HandStrength(weight, oppcards, boardcards)
@@ -408,6 +374,9 @@ class Game:
                 best_score = v
                 best_action = a
                 #print("RES"+str(best_action))
+        # TODO: Since our player folds a lot. Please update/remove as required
+        if best_action == 'fold':
+            best_action = 'call'
         return best_action
 
         #a = np.argmax(list(map(lambda a: min_value(self.project(newState, a),0),self.actions(newState))))
