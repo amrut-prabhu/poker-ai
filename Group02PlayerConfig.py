@@ -8,6 +8,8 @@ from pypokerengine.engine.hand_evaluator import HandEvaluator
 import numpy as np
 import time
 import random
+import Group02_eval_pre_flop as eval_pre_flop
+import Group02_eval_post_flop as eval_post_flop
 
 MINIMAX_DEPTH = 2
 NUM_ROUNDS = 20 # num rounds in MiniMax Game?
@@ -263,7 +265,15 @@ class Group02Player(BasePokerPlayer):
         if isDebug:
             print("Getting action...")
 
-        action = game.minimax(game_state, MINIMAX_DEPTH)
+        try:
+            action = game.minimax(game_state, MINIMAX_DEPTH, hole_card, round_state['community_card'])
+        except TypeError:
+            for i in valid_actions:
+                if i["action"] == "raise":
+                    action = i["action"]
+                    return action  # action returned here is sent to the poker engine
+            action = valid_actions[1]["action"]
+            return action
 
         if isDebug:
             print("================Action selected...")
@@ -271,8 +281,6 @@ class Group02Player(BasePokerPlayer):
         if isActionTimed:
             end = time.time()
             print("..............Action selected in TIME: " + str(end - start) + " secs")
-
-
 
         return action
 
@@ -328,18 +336,23 @@ class Game:
         temp = list(map(lambda x:x['action'],self.emulator.generate_possible_actions(state)))
         return temp
 
-    def eval_heuristics(self, player, state):
+    def eval_heuristics(self, player, state, hole_cards, community_cards):
         if isDebug:
             print("Evaluating heuristics")
         if isHeuristicTimed:
             start = time.time()
             print(time.time())
 
-        win_rate = estimate_hole_card_win_rate(self.num_rounds, 2, self.hole_card, state['table']._community_card)
+        if(community_cards == []):  # Preflop
+            win_rate = eval_pre_flop.eval_pre_flop(hole_cards)
+        else:
+            win_rate = eval_post_flop.eval_post_flop_rank(hole_cards, community_cards)
 
         amount_in_pot = self.round_state['pot']['main']['amount']
-
         EHS = EffectiveHandStrength(self.hole_card, state['table']._community_card)
+
+        if isDebug:
+            print("=======Got heuristics")
         if isHeuristicTimed:
             end = start = time.time()
             print("==========Got heuristics in time: " + str(end-start) + " secs")
@@ -356,15 +369,19 @@ class Game:
         return self.emulator.apply_action(curr_state, move)[0]
 
     """ MiniMax decision strategy """
-    def minimax(self, newState, max_depth):
+    def minimax(self, newState, max_depth, hole_cards, community_cards):
 
         player = self.future_move(newState)
         inf = float('inf')
 
         """ determines what the strategy of the Min palyer should be. It is limited by max depth"""
         def min_value(newState,alpha,beta,depth):
+            if isDebug:
+                print("In MIN")
+
             if depth== max_depth or self.terminal_test(newState):
-                return self.eval_heuristics(player, newState)
+                return self.eval_heuristics(player, newState, hole_cards, community_cards)
+
             v = inf
             for a in self.actions(newState):
                 v = min(max_value(self.project(newState, a),alpha,beta, depth+1),v)
@@ -375,8 +392,12 @@ class Game:
 
         """ determines what the strategy of the Max palyer should be. It is limited by max depth"""
         def max_value(newState,alpha,beta,depth):
+            if isDebug:
+                print("In MAX")
+
             if depth == max_depth or self.terminal_test(newState):
-                return self.eval_heuristics(player, newState)
+                return self.eval_heuristics(player, newState, hole_cards, community_cards)
+
             v = -inf
             for a in self.actions(newState):
                 v = max(min_value(self.project(newState, a), alpha,beta, depth+1),v)
@@ -397,5 +418,3 @@ class Game:
                 best_score = v
                 best_action = a
         return best_action
-
-

@@ -79,7 +79,7 @@ def eval_post_flop_current(hole_cards, community_cards):
             #     loses += 1
             elif(opp_score == score):
                 draws += 1
-    print("Rounds played: " + str(rounds) + " Wins: " + str(wins) + " Draws: " + str(draws))
+    # print("Rounds played: " + str(rounds) + " Wins: " + str(wins) + " Draws: " + str(draws))
     return 100.0 * (float(wins)/rounds)
 
 
