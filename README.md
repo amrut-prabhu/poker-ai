@@ -1,4 +1,8 @@
-## Term Project
+## Adversarial Poker Agent
+
+Built using a MiniMax search tree with alpha beta pruning.
+
+Project report can be viewed [here](https://github.com/amrut-prabhu/poker-ai/blob/master/Poker02_Report.pdf).
 
 ### Set up environment
 using the conda or pyenv
