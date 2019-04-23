@@ -1,6 +1,7 @@
 ## Adversarial Poker Agent
 
-Built a Limit Texas Hold 'Em Poker bot using a MiniMax search tree with alpha beta pruning.
+Built a Limit Texas Hold 'Em Poker bot using a MiniMax search tree with alpha beta pruning and 3 heuristics - probability of winning, effective hand strength, and amount in the pot.
+The implementation of the `Group02Player` poker agent can be seen in [Group02PlayerConfig.py](https://github.com/amrut-prabhu/poker-ai/blob/master/Group02PlayerConfig.py).  
 
 Project report can be viewed [here](https://github.com/amrut-prabhu/poker-ai/blob/master/Poker02_Report.pdf).
 
